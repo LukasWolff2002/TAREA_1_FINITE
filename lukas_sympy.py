@@ -128,13 +128,8 @@ n3 = Node(2, np.array([0, 4]))
 
 #Defino algunos elementos
 e1 = Elements(n1, n2)
-e2 = Elements(n2, n3)
+
 
 #Defino la matriz de estructura
-sm = StructureMatrix([e1, e2], [n1, n2, n3])
+sm = StructureMatrix([e1], [n1, n2])
 sp.pprint(sm.k_assembly)
-
-
-
-
-
