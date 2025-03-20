@@ -5,15 +5,18 @@ E = 4700 * np.sqrt(fc)
 A = 300 * 300
 I = 300 * 300 ** 3 / 12
 
-A = A * 1000
+#Axialmente rigido
+A = A*100
+
 
 class Elements:
 
-    def __init__ (self, n1, n2):
-        self.n1 = n1.n
-        self.n2 = n2.n
+    def __init__ (self, n1, n2, q=0):
+        self.n1 = n1
+        self.n2 = n2
         self.coords_i = n1.coord
         self.coords_f = n2.coord
+        self.q = q
         #self.E = E
         #self.A = A
         #self.I = I
@@ -22,9 +25,10 @@ class Elements:
         self.L, self.angle = self.length_angle()
         self.k_local = self.local_matrix()
         self.k_global = self.global_matrix()
+        self.Estructure_1()
 
     def length_angle (self):
-        length = (np.linalg.norm(self.coords_f - self.coords_i)) * 1000
+        length = (np.linalg.norm(self.coords_f - self.coords_i)) 
         angle = np.arctan2(self.coords_f[1] - self.coords_i[1], self.coords_f[0] - self.coords_i[0])
         return length, angle
 
@@ -58,4 +62,22 @@ class Elements:
         Ke = T @ k @ T.T
         
         return Ke
+    
+    def Estructure_1(self):
+        if self.q != 0:
+
+            m = (self.q*self.L**2)/12
+            v = (self.q*self.L)/2
+
+            #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
+            if self.n1.coord[0] < self.n2.coord[0]:
+                
+                self.n1.force_vector = self.n1.force_vector + np.array([0, v, m])
+                self.n2.force_vector = self.n2.force_vector + np.array([0, v, -m])
+            
+            else:
+                self.n1.force_vector += np.array([0, v, -m])
+                self.n2.force_vector += np.array([0, v, m])
+
+        
  

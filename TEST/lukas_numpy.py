@@ -286,9 +286,9 @@ e3 = Elements(n3, n4)
 #Defino la matriz de estructura
 sm = StructureMatrix([e1, e2, e3], [n1, n2, n3, n4])
 
-Desplazamientos([n1, n2, n3, n4], sm.kff_matrix, sm.kfc_matrix, sm.kcf_matrix, sm.kcc_matrix)
+Des = Desplazamientos([n1, n2, n3, n4], sm.kff_matrix, sm.kfc_matrix, sm.kcf_matrix, sm.kcc_matrix)
 
-print(Desplazamientos.uf_v)
+print(Des.uf_v)
 
 
 

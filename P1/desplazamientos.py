@@ -12,6 +12,7 @@ class Desplazamientos:
         self.uc = self.uc_vector()
         self.uf_v = self.uf_vector()
         self.rc_v = self.rc_vector()
+        self.def_vector()
 
     def ff_vector(self):
         #Debo generar un vector de fuerzas
@@ -52,3 +53,14 @@ class Desplazamientos:
     def rc_vector (self):
         rc_v = self.kcf @ self.uf_v + self.kcc @ self.uc
         return rc_v
+    
+    #Agrego los desplzamientos de los nodos en los grados de libertad libres
+    def def_vector (self):
+        for node in self.nodes:
+            for i, b in enumerate(node.boundary):
+                if b == 1:
+                    pass
+                else:
+                    node.def_vector[i] += self.uf_v[i]
+                    
+

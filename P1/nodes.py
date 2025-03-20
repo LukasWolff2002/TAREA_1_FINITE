@@ -9,6 +9,7 @@ class Node:
         self.boundary = boundary
         self.force_vector = force_vector
         self.vector_desplazamientos = vector_desplazamientos
+        self.def_vector = np.array([0.0,0.0,0.0])
 
     def index (self):
         #Debo generar un array desde n hasta n+ndof, con np.array

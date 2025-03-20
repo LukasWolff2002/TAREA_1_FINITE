@@ -2,7 +2,7 @@ import numpy as np
 
 class Assembly:
 
-    def __init__ (self, elements,nodes, ndof=3):
+    def __init__ (self, nodes, elements, ndof=3):
         self.nodes = nodes
         self.N_nodes = len(nodes)
         self.elements = elements
@@ -36,10 +36,10 @@ class Assembly:
             n2 = element.n2
 
             # Sumar cada cuadrante a la matriz global en su ubicación correspondiente
-            o_matrix[n1*3:(n1+1)*3, n1*3:(n1+1)*3] += Q1  # Cuadrante superior izquierdo en (n1, n1)
-            o_matrix[n1*3:(n1+1)*3, n2*3:(n2+1)*3] += Q2  # Cuadrante superior derecho en (n1, n2)
-            o_matrix[n2*3:(n2+1)*3, n1*3:(n1+1)*3] += Q3  # Cuadrante inferior izquierdo en (n2, n1)
-            o_matrix[n2*3:(n2+1)*3, n2*3:(n2+1)*3] += Q4  # Cuadrante inferior derecho en (n2, n2)
+            o_matrix[n1.n*3:(n1.n+1)*3, n1.n*3:(n1.n+1)*3] += Q1  # Cuadrante superior izquierdo en (n1, n1)
+            o_matrix[n1.n*3:(n1.n+1)*3, n2.n*3:(n2.n+1)*3] += Q2  # Cuadrante superior derecho en (n1, n2)
+            o_matrix[n2.n*3:(n2.n+1)*3, n1.n*3:(n1.n+1)*3] += Q3  # Cuadrante inferior izquierdo en (n2, n1)
+            o_matrix[n2.n*3:(n2.n+1)*3, n2.n*3:(n2.n+1)*3] += Q4  # Cuadrante inferior derecho en (n2, n2)
 
 
         return o_matrix

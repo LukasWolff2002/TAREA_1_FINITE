@@ -3,37 +3,143 @@ from nodes import Node
 from elements import Elements
 from desplazamientos import Desplazamientos
 from assembly import Assembly
+import matplotlib.pyplot as plt
 
-fc = 28
-E = 4700 * np.sqrt(fc)
-A = 300 * 300
-I = 300 * 300 ** 3 / 12
+nodes = []
+elements = []
 
-A = A * 1000
+espaciado_h = 7 #m
+Espaciado_v = [3.66, 5.49, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96]
+base_v = 0
 
-#Defino algunos nodos
-n1 = Node(0, np.array([0, 0]), np.array([1, 1 ,1]), np.array([0, 0, 0]))
-n2 = Node(1, np.array([2, 3]), np.array([0, 0, 0]), np.array([29419.95, -9806.65, 0]))
-n3 = Node(2, np.array([6, 3]), np.array([0, 0, 0]), np.array([0, -9806.65, 0]))
-n4 = Node(3, np.array([6, 0]), np.array([1, 1, 0]), np.array([0, 0, 0]))
-
-
-#Defino algunos elementos
-e1 = Elements(n1, n2)
-e2 = Elements(n2, n3)
-e3 = Elements(n3, n4) 
+nodos_ancho = 6
+pisos = 10
+#Defino los nodos base
+for i in range(nodos_ancho):
+    nodes.append(Node(i, np.array([i*espaciado_h, 0]), np.array([1, 1, 1]), np.array([0.0, 0.0, 0.0])))
 
 
-#Defino la matriz de estructura
-sm = Assembly([e1, e2, e3], [n1, n2, n3, n4])
+#Defino los nodos de los pisos
+for j in range(1, pisos+1):
+    espaciado_v = Espaciado_v[j-1]
+    vertical = base_v + espaciado_v
+    for i in range(nodos_ancho):
+        nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
 
-Des = Desplazamientos([n1, n2, n3, n4], sm.kff_matrix, sm.kfc_matrix, sm.kcf_matrix, sm.kcc_matrix)
+    #Ahora conecto verticalmente los pisos
+    for i in range(nodos_ancho):
+        elements.append(Elements(nodes[i+(j-1)*nodos_ancho], nodes[i+j*nodos_ancho]))
 
-print(Des.uf_v)
+    #Defino elementos horizontales que conectan los ultimos nodos creados
+    for i in range(nodos_ancho-1):
+        nodos_actuales = len(nodes)
+        elements.append(Elements(nodes[nodos_actuales-(nodos_ancho) + i], nodes[nodos_actuales-nodos_ancho + i + 1 ], -1000))
+
+    base_v = vertical
+#Ahora tomo la masa total de la estructra
+
+M = Assembly(nodes, elements)
+
+Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
 import matplotlib.pyplot as plt
 
-def plot_structure(nodes, elements, desplazamientos, scale=1000):
+def plot_original_structure_all_forces(nodes, elements):
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Graficar elementos originales
+    for element in elements:
+        x1, y1 = element.n1.coord
+        x2, y2 = element.n2.coord
+        ax.plot([x1, x2], [y1, y2], 'k-', label="Estructura Original" if element == elements[0] else "")
+
+    # Graficar nodos
+    for node in nodes:
+        x, y = node.coord
+        ax.scatter(x, y, color='g', s=50, zorder=3, label="Nodo" if node == nodes[0] else "")
+
+    # Graficar todas las fuerzas aplicadas en cada nodo (Fuerzas en X, Y)
+    for node in nodes:
+        x, y = node.coord
+        fx, fy, m = node.force_vector  # Considerar también el momento
+
+        if fx != 0:
+            ax.quiver(x, y, 1, 0, angles='xy', scale_units='xy', scale=1, color='b', label="Fuerza en X" if node == nodes[0] else "")
+        if fy != 0:
+            ax.quiver(x, y, 0, -1, angles='xy', scale_units='xy', scale=1, color='r', label="Fuerza en Y" if node == nodes[0] else "")
+
+        # Graficar momento como una flecha curva
+        if m != 0:
+            arc = plt.Circle((x, y), 0.2, color='purple', fill=False, linestyle='dashed')
+            ax.add_patch(arc)
+            ax.text(x + 0.25, y + 0.25, f'M={m:.2f}', fontsize=10, color='purple')
+
+    # Configuración del gráfico
+    ax.set_xlabel("X [m]")
+    ax.set_ylabel("Y [m]")
+    ax.set_title("Estructura Original con Nodos, Fuerzas y Momentos Aplicados")
+    ax.legend()
+    ax.axis("equal")
+    plt.grid(True)
+    plt.show()
+
+# Ejecutar la función para graficar la estructura con todas las fuerzas aplicadas
+plot_original_structure_all_forces(nodes, elements)
+
+def plot_deformed_structure(nodes, elements, scale=1000):
+    """
+    Grafica la estructura desplazada usando los valores de desplazamiento almacenados en cada nodo.
+    
+    Parámetros:
+    - nodes: Lista de nodos de la estructura.
+    - elements: Lista de elementos que conectan los nodos.
+    - scale: Factor de escala para amplificar las deformaciones y hacerlas visibles.
+    """
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Diccionarios para almacenar coordenadas originales y desplazadas
+    coords_original = {node.n: node.coord for node in nodes}
+    coords_deformed = {}
+
+    # Calcular coordenadas desplazadas
+    for node in nodes:
+        dx, dy = node.def_vector[:2] * scale  # Aplicar factor de escala
+        coords_deformed[node.n] = node.coord + np.array([dx, dy])
+
+    # Graficar estructura original
+    for element in elements:
+        x1, y1 = coords_original[element.n1.n]
+        x2, y2 = coords_original[element.n2.n]
+        ax.plot([x1, x2], [y1, y2], 'k-', label="Original" if element == elements[0] else "")
+
+    # Graficar estructura desplazada
+    for element in elements:
+        xd1, yd1 = coords_deformed[element.n1.n]
+        xd2, yd2 = coords_deformed[element.n2.n]
+        ax.plot([xd1, xd2], [yd1, yd2], 'r--', label="Deformada" if element == elements[0] else "")
+
+    # Graficar nodos originales y desplazados
+    for node in nodes:
+        x, y = coords_original[node.n]
+        ax.scatter(x, y, color='g', s=50, zorder=3, label="Nodo Original" if node == nodes[0] else "")
+
+        xd, yd = coords_deformed[node.n]
+        ax.scatter(xd, yd, color='b', s=50, zorder=3, label="Nodo Desplazado" if node == nodes[0] else "")
+
+    # Configuración del gráfico
+    ax.set_xlabel("X [m]")
+    ax.set_ylabel("Y [m]")
+    ax.set_title("Estructura Original y Deformada")
+    ax.legend()
+    ax.axis("equal")
+    plt.grid(True)
+    plt.show()
+
+# Ejecutar la función para graficar la estructura desplazada con escala ajustable
+plot_deformed_structure(nodes, elements, scale=1000000)
+
+
+
 
 
 
