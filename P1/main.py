@@ -142,7 +142,7 @@ M = Assembly(nodes, elements, fixed = True)
 
 Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
-#plot_deformed_structure(nodes, elements, scale=100)
+plot_deformed_structure(nodes, elements, scale=100)
 print('---------------------')
 for node in nodes:
     print(node.def_vector)
