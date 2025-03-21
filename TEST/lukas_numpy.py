@@ -7,7 +7,7 @@ E = 4700 * np.sqrt(fc)
 A = 300 * 300
 I = 300 * 300 ** 3 / 12
 
-A = A * 1000
+A = A * 1
 
 class Node:
 
@@ -290,6 +290,7 @@ Des = Desplazamientos([n1, n2, n3, n4], sm.kff_matrix, sm.kfc_matrix, sm.kcf_mat
 
 print(Des.uf_v)
 
+print(Des.rc)
 
 
 

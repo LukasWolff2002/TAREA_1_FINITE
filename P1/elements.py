@@ -7,7 +7,7 @@ gamma = 7800 #Kg/m3
 
 class Elements:
 
-    def __init__ (self, n1, n2, A=[100000, 100000], q=0):
+    def __init__ (self, n1, n2, A=[200, 200], q=0):
         #De base defino un area muy grande para las secciones que son axialmente rigidas
 
         self.n1 = n1
@@ -28,6 +28,7 @@ class Elements:
     def length_angle (self):
         length = (np.linalg.norm(self.coords_f - self.coords_i)) 
         angle = np.arctan2(self.coords_f[1] - self.coords_i[1], self.coords_f[0] - self.coords_i[0])
+
         return length, angle
 
     def local_matrix (self):
@@ -52,11 +53,11 @@ class Elements:
         c = np.cos(self.angle)
         s = np.sin(self.angle)
 
-        T = np.array([[c, -s, 0, 0, 0, 0], 
-                      [s, c, 0, 0, 0, 0],
+        T = np.array([[c, s, 0, 0, 0, 0], 
+                      [-s, c, 0, 0, 0, 0],
                       [0, 0, 1, 0, 0, 0],
-                      [0, 0, 0, c, -s, 0],
-                      [0, 0, 0, s, c, 0],
+                      [0, 0, 0, c, s, 0],
+                      [0, 0, 0, -s, c, 0],
                       [0, 0, 0, 0, 0, 1]])
         
         Ke = T @ k @ T.T
@@ -66,8 +67,8 @@ class Elements:
     def Estructure_1(self):
         if self.q != 0:
 
-            m = (self.q*self.L**2)/12
-            v = (self.q*self.L)/2
+            m = (self.q*self.L**2)/12 #
+            v = (self.q*self.L)/2 
 
             #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
             if self.n1.coord[0] < self.n2.coord[0]:

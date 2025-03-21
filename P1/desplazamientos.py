@@ -47,25 +47,32 @@ class Desplazamientos:
     
     
     def uf_vector (self):
+        print(self.kff.shape)
         uf_v = np.linalg.inv(self.kff) @ (self.ff - self.kfc @ self.uc)
         return uf_v
     
     def rc_vector (self):
+        print(self.kcc.shape)
         rc_v = self.kcf @ self.uf_v + self.kcc @ self.uc
         return rc_v
     
     #Agrego los desplzamientos de los nodos en los grados de libertad libres
-    def def_vector (self):
+    def def_vector(self):
+        contador = 0  # índice para self.uf_v
+
         for node in self.nodes:
             for i, b in enumerate(node.boundary):
-                if b == 1:
-                    pass
-                else:
-                    if i == len(node.boundary)-1:
-                        #El giro lo mantengo en radianes
-                        node.def_vector[i] += (self.uf_v[i])
+                if b == 0:  # Solo si el GDL está libre
+                    # Si es traslación (i == 0 o 1), probablemente quieres mm → multiplicar por 1000
+                    if i == 0 or i == 1:
+                        node.def_vector[i] += self.uf_v[contador]/1000   # metros a mm
                     else:
-                        #Los desplazamientos los paso a mm
-                        node.def_vector[i] += (self.uf_v[i])/1000
+                        node.def_vector[i] += self.uf_v[contador]  # rotación, en radianes
+                    contador += 1
+
+        print(self.uf_v)
+
+
+
                     
 

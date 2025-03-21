@@ -44,98 +44,32 @@ class Assembly:
 
         return o_matrix
 
-    def final_matrix(self):
-        o_matrix = self.k_assembly  # Suponemos que es una matriz NumPy
+    def extraer_submatriz(self, fila_cond, col_cond):
+        o_matrix = self.k_assembly
+        filas = set()
+        cols = set()
 
-        # Diccionarios para almacenar los índices a eliminar
-        filas_a_eliminar = set()
-        columnas_a_eliminar = set()
+        for node in self.nodes:
+            for i, b in enumerate(node.boundary):
+                if fila_cond(b):
+                    filas.add(node.idx[i])
+                if col_cond(b):
+                    cols.add(node.idx[i])
 
-        # Determinar qué filas y columnas deben eliminarse
-        for nodes in self.nodes:
-            for i, b in enumerate(nodes.boundary):
-                if b == 1:
-                    filas_a_eliminar.add(nodes.idx[i])
-                    columnas_a_eliminar.add(nodes.idx[i])
+        filas_restantes = [i for i in range(o_matrix.shape[0]) if i not in filas]
+        cols_restantes = [j for j in range(o_matrix.shape[1]) if j not in cols]
 
-        # Crear listas con los índices que queremos mantener
-        filas_restantes = [i for i in range(o_matrix.shape[0]) if i not in filas_a_eliminar]
-        columnas_restantes = [j for j in range(o_matrix.shape[1]) if j not in columnas_a_eliminar]
-
-        # Extraer la matriz sin esas filas y columnas
-        o_matrix = o_matrix[np.ix_(filas_restantes, columnas_restantes)]
-
-        return o_matrix
-
+        return o_matrix[np.ix_(filas_restantes, cols_restantes)]
     
-  
+    def final_matrix(self):
+        return self.extraer_submatriz(lambda b: b == 1, lambda b: b == 1)
 
     def matriz_kfc(self):
-        o_matrix = self.k_assembly  # Suponemos que es una matriz NumPy
+        return self.extraer_submatriz(lambda b: b == 1, lambda b: b == 0)
 
-        filas_a_eliminar = set()
-        columnas_a_eliminar = set()
-
-        # Determinar qué filas y columnas deben eliminarse
-        for nodes in self.nodes:
-            for i, b in enumerate(nodes.boundary):
-                if b == 1:
-                    filas_a_eliminar.add(nodes.idx[i])  # Eliminar columna si boundary es 1
-                if b == 0:
-                    columnas_a_eliminar.add(nodes.idx[i])  # Eliminar fila si boundary es 0
-
-
-        # Crear listas con los índices que queremos mantener
-        filas_restantes = [i for i in range(o_matrix.shape[0]) if i not in filas_a_eliminar]
-        columnas_restantes = [j for j in range(o_matrix.shape[1]) if j not in columnas_a_eliminar]
-
-        # Extraer la submatriz con las filas y columnas restantes
-        o_matrix = o_matrix[np.ix_(filas_restantes, columnas_restantes)]
-
-        return o_matrix
-    
     def matriz_kcf(self):
-        o_matrix = self.k_assembly  # Suponemos que es una matriz NumPy
+        return self.extraer_submatriz(lambda b: b == 0, lambda b: b == 1)
 
-        filas_a_eliminar = set()
-        columnas_a_eliminar = set()
-
-        # Determinar qué filas y columnas deben eliminarse
-        for nodes in self.nodes:
-            for i, b in enumerate(nodes.boundary):
-                if b == 1:
-                    columnas_a_eliminar.add(nodes.idx[i])  # Eliminar columna si boundary es 1
-                if b == 0:
-                    filas_a_eliminar.add(nodes.idx[i])  # Eliminar fila si boundary es 0
-
-        # Crear listas con los índices que queremos mantener
-        filas_restantes = [i for i in range(o_matrix.shape[0]) if i not in filas_a_eliminar]
-        columnas_restantes = [j for j in range(o_matrix.shape[1]) if j not in columnas_a_eliminar]
-
-        # Extraer la submatriz con las filas y columnas restantes
-        o_matrix = o_matrix[np.ix_(filas_restantes, columnas_restantes)]
-
-        return o_matrix
-    
     def matriz_kcc(self):
-        o_matrix = self.k_assembly  # Suponemos que es una matriz NumPy
+        return self.extraer_submatriz(lambda b: b == 0, lambda b: b == 0)
 
-        # Diccionarios para almacenar los índices a eliminar
-        filas_a_eliminar = set()
-        columnas_a_eliminar = set()
-
-        # Determinar qué filas y columnas deben eliminarse
-        for nodes in self.nodes:
-            for i, b in enumerate(nodes.boundary):
-                if b == 0:
-                    filas_a_eliminar.add(nodes.idx[i])
-                    columnas_a_eliminar.add(nodes.idx[i])
-
-        # Crear listas con los índices que queremos mantener
-        filas_restantes = [i for i in range(o_matrix.shape[0]) if i not in filas_a_eliminar]
-        columnas_restantes = [j for j in range(o_matrix.shape[1]) if j not in columnas_a_eliminar]
-
-        # Extraer la matriz sin esas filas y columnas
-        o_matrix = o_matrix[np.ix_(filas_restantes, columnas_restantes)]
-
-        return o_matrix

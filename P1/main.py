@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 nodes = []
 elements = []
 
-espaciado_h = 7 #m
+espaciado_h = 9.14 #m
 Espaciado_v = [3.66, 
                5.49, 
                (3.96)/2, 
@@ -44,20 +44,20 @@ losas = [1, #Piso 1
 #Ahora defino las secciones por piso
 
 #Seccion (mm, mm)   Izquierda   Centrales    Derecha
-secciones_piso = [[[300, 300], [100, 100], [100, 100]], #Piso 1
-                  [[300, 300], [100, 100], [100, 100]], #Piso 2
-                  [[300, 300], [100, 100], [100, 100]], #Piso 3
-                  [[300, 300], [100, 100], [100, 100]], #Piso 4
-                  [[300, 300], [100, 100], [100, 100]], #Piso 5
-                  [[300, 300], [100, 100], [100, 100]], #Piso 6
-                  [[300, 300], [100, 100], [100, 100]], #Piso 7
-                  [[300, 300], [100, 100], [100, 100]], #Piso 8
-                  [[300, 300], [100, 100], [100, 100]], #Piso 9
-                  [[300, 300], [100, 100], [100, 100]], #Piso 10
-                  [[300, 300], [100, 100], [100, 100]], #Piso 11
-                  [[300, 300], [100, 100], [100, 100]], #Piso 12
-                  [[300, 300], [100, 100], [100, 100]], #Piso 13
-                  [[300, 300], [100, 100], [100, 100]]  #Piso 14
+secciones_piso = [[[300, 300], [100, 200], [100, 400]], #Piso 1
+                  [[300, 300], [100, 200], [100, 400]], #Piso 2
+                  [[300, 300], [100, 200], [100, 400]], #Piso 3
+                  [[300, 300], [100, 200], [100, 400]], #Piso 4
+                  [[300, 300], [100, 200], [100, 400]], #Piso 5
+                  [[300, 300], [100, 200], [100, 400]], #Piso 6
+                  [[300, 300], [100, 200], [100, 400]], #Piso 7
+                  [[300, 300], [100, 200], [100, 400]], #Piso 8
+                  [[300, 300], [100, 200], [100, 400]], #Piso 9
+                  [[300, 300], [100, 200], [100, 400]], #Piso 10
+                  [[300, 300], [100, 200], [100, 400]], #Piso 11
+                  [[300, 300], [100, 200], [100, 400]], #Piso 12
+                  [[300, 300], [100, 200], [100, 400]], #Piso 13
+                  [[300, 300], [100, 200], [100, 400]]  #Piso 14
                   ]
 
 cargas_q = [26,
@@ -77,13 +77,13 @@ cargas_q = [26,
             
             
 
-nodos_ancho = 3 #6
+nodos_ancho = 6
 pisos = 14
 
 base_v = 0
 #Defino los nodos base
 for i in range(nodos_ancho):
-    nodes.append(Node(i, np.array([i*espaciado_h, 0]), np.array([1, 1, 1]), np.array([0.0, 0.0, 0.0])))
+    nodes.append(Node(i, np.array([i*espaciado_h, 0]), np.array([1, 1, 0]), np.array([0.0, 0.0, 0.0])))
 
 
 #Defino los nodos de los pisos
@@ -91,9 +91,20 @@ for j in range(1, pisos+1):
     espaciado_v = Espaciado_v[j-1]
     vertical = base_v + espaciado_v
 
-   
-    for i in range(nodos_ancho):
-        nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
+    if j == 1:
+        for i in range(nodos_ancho):
+            if i == 0:
+                nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([1, 1, 0]), np.array([0.0, 0.0, 0.0])))
+
+            elif i == nodos_ancho-1:
+                nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([1, 1, 0]), np.array([0.0, 0.0, 0.0])))
+
+            else:
+                nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
+
+    else:
+        for i in range(nodos_ancho):
+            nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
 
     #Ahora conecto verticalmente los pisos
     for i in range(nodos_ancho):
@@ -122,10 +133,7 @@ Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_mat
 # Ejecutar la función para graficar la estructura c on todas las fuerzas aplicadas
 plot_original_structure_all_forces(nodes, elements)
 
-
-
 # Ejecutar la función para graficar la estructura desplazada con escala ajustable
 plot_deformed_structure(nodes, elements, scale=100)
 
-for node in nodes:
-    print(f"Nodo {node.n} - Desplazamientos: {node.def_vector}")
+
