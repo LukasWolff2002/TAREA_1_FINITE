@@ -22,7 +22,9 @@ class Elements:
 
         self.L, self.angle = self.length_angle()
         self.k_local = self.local_matrix()
+        self.tgo = self.tgo_matrix()
         self.k_global = self.global_matrix()
+        self.k_global_tgo = self.global_tgo_matrix()
         self.Estructure_1()
 
     def length_angle (self):
@@ -46,9 +48,23 @@ class Elements:
                       [0, (6*E*I)/(L**2), (2*E*I)/L, 0, -(6*E*I)/(L**2), (4*E*I)/L]])
         
         return k
+    
+    def tgo_matrix (self):
+        dx = self.L * np.cos(self.angle)
+        dy = self.L * np.sin(self.angle)
+
+        tgo = np.array([[1, 0, -dy, 0, 0, 0],
+                        [0, 1, dx, 0, 0, 0],
+                        [0, 0, 1, 0, 0, 0],
+                        [0, 0, 0, 1, 0, -dy],
+                        [0, 0, 0, 0, 1, dx],
+                        [0, 0, 0, 0, 0, 1]])
+        
+        return tgo
         
     def global_matrix (self):
         k = self.k_local
+        tgo = self.tgo
 
         c = np.cos(self.angle)
         s = np.sin(self.angle)
@@ -61,8 +77,30 @@ class Elements:
                       [0, 0, 0, 0, 0, 1]])
         
         Ke = T @ k @ T.T
+        Ke = tgo.T @ Ke @ tgo
         
         return Ke
+    
+    def global_tgo_matrix (self):
+        k = self.k_local
+        tgo = self.tgo
+
+        c = np.cos(self.angle)
+        s = np.sin(self.angle)
+
+        T = np.array([[c, s, 0, 0, 0, 0], 
+                      [-s, c, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, c, s, 0],
+                      [0, 0, 0, -s, c, 0],
+                      [0, 0, 0, 0, 0, 1]])
+        
+        Ke = T @ k @ T.T
+        Ke = tgo.T @ Ke @ tgo
+        
+        return Ke
+    
+                      
     
     def Estructure_1(self):
         if self.q != 0:

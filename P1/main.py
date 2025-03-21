@@ -43,21 +43,21 @@ losas = [1, #Piso 1
         
 #Ahora defino las secciones por piso
 
-#Seccion (mm, mm)   Izquierda   Centrales    Derecha
-secciones_piso = [[[300, 300], [100, 200], [100, 400]], #Piso 1
-                  [[300, 300], [100, 200], [100, 400]], #Piso 2
-                  [[300, 300], [100, 200], [100, 400]], #Piso 3
-                  [[300, 300], [100, 200], [100, 400]], #Piso 4
-                  [[300, 300], [100, 200], [100, 400]], #Piso 5
-                  [[300, 300], [100, 200], [100, 400]], #Piso 6
-                  [[300, 300], [100, 200], [100, 400]], #Piso 7
-                  [[300, 300], [100, 200], [100, 400]], #Piso 8
-                  [[300, 300], [100, 200], [100, 400]], #Piso 9
-                  [[300, 300], [100, 200], [100, 400]], #Piso 10
-                  [[300, 300], [100, 200], [100, 400]], #Piso 11
-                  [[300, 300], [100, 200], [100, 400]], #Piso 12
-                  [[300, 300], [100, 200], [100, 400]], #Piso 13
-                  [[300, 300], [100, 200], [100, 400]]  #Piso 14
+#Seccion (mm, mm)   I y D       Centrales   
+secciones_piso = [[[300, 300], [100, 200]], #Piso 1
+                  [[300, 300], [100, 200]], #Piso 2
+                  [[300, 300], [100, 200]], #Piso 3
+                  [[300, 300], [100, 200]], #Piso 4
+                  [[300, 300], [100, 200]], #Piso 5
+                  [[300, 300], [100, 200]], #Piso 6
+                  [[300, 300], [100, 200]], #Piso 7
+                  [[300, 300], [100, 200]], #Piso 8
+                  [[300, 300], [100, 200]], #Piso 9
+                  [[300, 300], [100, 200]], #Piso 10
+                  [[300, 300], [100, 200]], #Piso 11
+                  [[300, 300], [100, 200]], #Piso 12
+                  [[300, 300], [100, 200]], #Piso 13
+                  [[300, 300], [100, 200]]  #Piso 14
                   ]
 
 cargas_q = [26,
@@ -111,7 +111,7 @@ for j in range(1, pisos+1):
         if i == 0:
             A = secciones_piso[j-1][0]
         elif i == nodos_ancho-1:
-            A = secciones_piso[j-1][2]
+            A = secciones_piso[j-1][0]
         else:
             A = secciones_piso[j-1][1]
         elements.append(Elements(nodes[i+(j-1)*nodos_ancho], nodes[i+j*nodos_ancho], A=A))
@@ -135,5 +135,15 @@ plot_original_structure_all_forces(nodes, elements)
 
 # Ejecutar la función para graficar la estructura desplazada con escala ajustable
 plot_deformed_structure(nodes, elements, scale=100)
+for node in nodes:
+    print(node.def_vector)
 
+M = Assembly(nodes, elements, fixed = True)
+
+Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
+
+#plot_deformed_structure(nodes, elements, scale=100)
+print('---------------------')
+for node in nodes:
+    print(node.def_vector)
 

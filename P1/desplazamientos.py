@@ -14,6 +14,7 @@ class Desplazamientos:
         self.rc_v = self.rc_vector()
         self.def_vector()
 
+
     def ff_vector(self):
         #Debo generar un vector de fuerzas
 
@@ -47,12 +48,12 @@ class Desplazamientos:
     
     
     def uf_vector (self):
-        print(self.kff.shape)
+
         uf_v = np.linalg.inv(self.kff) @ (self.ff - self.kfc @ self.uc)
         return uf_v
     
     def rc_vector (self):
-        print(self.kcc.shape)
+
         rc_v = self.kcf @ self.uf_v + self.kcc @ self.uc
         return rc_v
     
@@ -70,7 +71,6 @@ class Desplazamientos:
                         node.def_vector[i] += self.uf_v[contador]  # rotación, en radianes
                     contador += 1
 
-        print(self.uf_v)
 
 
 

@@ -2,12 +2,13 @@ import numpy as np
 
 class Assembly:
 
-    def __init__ (self, nodes, elements, ndof=3):
+    def __init__ (self, nodes, elements, ndof=3, fixed = False):
         self.nodes = nodes
         self.N_nodes = len(nodes)
         self.elements = elements
         self.N_elements = len(elements)
         self.ndof = ndof
+        self.fixed = fixed
         self.k_assembly = self.assembly()
         self.kff_matrix = self.final_matrix()
         self.kfc_matrix = self.matriz_kfc()
@@ -22,7 +23,11 @@ class Assembly:
 
         #Ahora debo sumar los elementos de la matriz de rigides, en base a las matrices globales de cada elemento
         for element in self.elements:
-            k = element.k_global
+
+            if self.fixed:
+                k = element.k_global_tgo
+            else:
+                k = element.k_global
          
             #Debo dividir la matriz en cuatro secciones iguales
             Q1 = k[:3, :3]  # Cuadrante superior izquierdo
