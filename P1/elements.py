@@ -2,16 +2,14 @@ import numpy as np
 
 fc = 28
 E = 4700 * np.sqrt(fc)
-A = 300 * 300
-I = 300 * 300 ** 3 / 12
 
-#Axialmente rigido
-A = A*100
-
+gamma = 7800 #Kg/m3
 
 class Elements:
 
-    def __init__ (self, n1, n2, A=[0.1, 0.1], q=0):
+    def __init__ (self, n1, n2, A=[100000, 100000], q=0):
+        #De base defino un area muy grande para las secciones que son axialmente rigidas
+
         self.n1 = n1
         self.n2 = n2
         self.coords_i = n1.coord
@@ -19,7 +17,7 @@ class Elements:
         self.q = q
         #self.E = E
         self.A = A[0]*A[1]
-        #self.I = I
+        self.I = A[0]*A[1]**3/12
         #self.L = L
 
         self.L, self.angle = self.length_angle()
@@ -33,16 +31,18 @@ class Elements:
         return length, angle
 
     def local_matrix (self):
-        #L = self.length
+        L = self.L * 1000
+        I = self.I
+        A = self.A
         
         
         #Por lo tanto puedo definir mi matriz K en coordenadas globales
-        k = np.array([[(A*E)/self.L, 0, 0, -(A*E)/self.L, 0, 0],
-                      [0, (12*E*I)/(self.L**3), (6*E*I)/(self.L**2), 0, -(12*E*I)/(self.L**3), (6*E*I)/(self.L**2)],
-                      [0, (6*E*I)/(self.L**2), (4*E*I)/self.L, 0, -(6*E*I)/(self.L**2), (2*E*I)/self.L],
-                      [-(A*E)/self.L, 0, 0, (A*E)/self.L, 0, 0],
-                      [0, -(12*E*I)/(self.L**3), -(6*E*I)/(self.L**2), 0, (12*E*I)/(self.L**3), -(6*E*I)/(self.L**2)],
-                      [0, (6*E*I)/(self.L**2), (2*E*I)/self.L, 0, -(6*E*I)/(self.L**2), (4*E*I)/self.L]])
+        k = np.array([[(A*E)/L, 0, 0, -(A*E)/L, 0, 0],
+                      [0, (12*E*I)/(L**3), (6*E*I)/(L**2), 0, -(12*E*I)/(L**3), (6*E*I)/(L**2)],
+                      [0, (6*E*I)/(L**2), (4*E*I)/L, 0, -(6*E*I)/(L**2), (2*E*I)/L],
+                      [-(A*E)/L, 0, 0, (A*E)/L, 0, 0],
+                      [0, -(12*E*I)/(L**3), -(6*E*I)/(L**2), 0, (12*E*I)/(L**3), -(6*E*I)/(L**2)],
+                      [0, (6*E*I)/(L**2), (2*E*I)/L, 0, -(6*E*I)/(L**2), (4*E*I)/L]])
         
         return k
         
