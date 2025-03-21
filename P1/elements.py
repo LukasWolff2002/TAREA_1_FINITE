@@ -11,14 +11,14 @@ A = A*100
 
 class Elements:
 
-    def __init__ (self, n1, n2, q=0):
+    def __init__ (self, n1, n2, A=[0.1, 0.1], q=0):
         self.n1 = n1
         self.n2 = n2
         self.coords_i = n1.coord
         self.coords_f = n2.coord
         self.q = q
         #self.E = E
-        #self.A = A
+        self.A = A[0]*A[1]
         #self.I = I
         #self.L = L
 

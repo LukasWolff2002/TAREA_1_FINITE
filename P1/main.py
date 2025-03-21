@@ -9,11 +9,60 @@ nodes = []
 elements = []
 
 espaciado_h = 7 #m
-Espaciado_v = [3.66, 5.49, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96, 3.96]
-base_v = 0
+Espaciado_v = [3.66, 
+               5.49, 
+               (3.96)/2, 
+               (3.96)/2, 
+               3.96, 
+               (3.96)/2, 
+               (3.96/2), 
+               3.96, 
+               (3.96)/2, 
+               (3.96/2), 
+               3.96, 
+               (3.96)/2, 
+               (3.96/2),
+               3.96]
+
+#Defino los pisos en que hay cambios de seccion
+losas = [1, #Piso 1
+         1, #Piso 2
+         0, #Piso 3
+         1, #Piso 4
+         1, #Piso 5
+         0, #Piso 6
+         1, #Piso 7
+         1, #Piso 8
+         0, #Piso 9
+         1, #Piso 10
+         1, #Piso 11
+         0, #Piso 12
+         1, #Piso 13
+        1] #Piso 14
+        
+#Ahora defino las secciones por piso
+
+        #Seccion   Izquierda   Centrales    Derecha
+secciones_piso = [[[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 1
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 2
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 3
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 4
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 5
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 6
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 7
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 8
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 9
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 10
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 11
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 12
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]], #Piso 13
+                  [[0.3, 0.3], [1.1, 1.1], [0.1, 0.1]]  #Piso 14
+                  ]
 
 nodos_ancho = 6
-pisos = 10
+pisos = 14
+
+base_v = 0
 #Defino los nodos base
 for i in range(nodos_ancho):
     nodes.append(Node(i, np.array([i*espaciado_h, 0]), np.array([1, 1, 1]), np.array([0.0, 0.0, 0.0])))
@@ -23,17 +72,27 @@ for i in range(nodos_ancho):
 for j in range(1, pisos+1):
     espaciado_v = Espaciado_v[j-1]
     vertical = base_v + espaciado_v
+
+   
     for i in range(nodos_ancho):
         nodes.append(Node(i+j*nodos_ancho, np.array([i*espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
 
     #Ahora conecto verticalmente los pisos
     for i in range(nodos_ancho):
-        elements.append(Elements(nodes[i+(j-1)*nodos_ancho], nodes[i+j*nodos_ancho]))
+        
+        if i == 0:
+            A = secciones_piso[j-1][0]
+        elif i == nodos_ancho-1:
+            A = secciones_piso[j-1][2]
+        else:
+            A = secciones_piso[j-1][1]
+        elements.append(Elements(nodes[i+(j-1)*nodos_ancho], nodes[i+j*nodos_ancho], A=A))
 
-    #Defino elementos horizontales que conectan los ultimos nodos creados
-    for i in range(nodos_ancho-1):
-        nodos_actuales = len(nodes)
-        elements.append(Elements(nodes[nodos_actuales-(nodos_ancho) + i], nodes[nodos_actuales-nodos_ancho + i + 1 ], -1000))
+    if losas[j-1] == 1:
+        #Defino elementos horizontales que conectan los ultimos nodos creados
+        for i in range(nodos_ancho-1):
+            nodos_actuales = len(nodes)
+            elements.append(Elements(nodes[nodos_actuales-(nodos_ancho) + i], nodes[nodos_actuales-nodos_ancho + i + 1 ], q=-1000))
 
     base_v = vertical
 #Ahora tomo la masa total de la estructra
@@ -42,16 +101,23 @@ M = Assembly(nodes, elements)
 
 Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
-import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 
 def plot_original_structure_all_forces(nodes, elements):
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    # Graficar elementos originales
+    # Obtener todas las áreas para normalización de colores
+    areas = np.array([element.A for element in elements])
+    norm = mcolors.Normalize(vmin=np.min(areas), vmax=np.max(areas))
+    cmap = cm.viridis  # Puedes cambiar a otro mapa de colores como 'plasma', 'coolwarm', etc.
+
+    # Graficar elementos originales con color basado en el área
     for element in elements:
         x1, y1 = element.n1.coord
         x2, y2 = element.n2.coord
-        ax.plot([x1, x2], [y1, y2], 'k-', label="Estructura Original" if element == elements[0] else "")
+        color = cmap(norm(element.A))
+        ax.plot([x1, x2], [y1, y2], color=color, linewidth=2, label="Elemento (color por A)" if element == elements[0] else "")
 
     # Graficar nodos
     for node in nodes:
@@ -64,9 +130,11 @@ def plot_original_structure_all_forces(nodes, elements):
         fx, fy, m = node.force_vector  # Considerar también el momento
 
         if fx != 0:
-            ax.quiver(x, y, 1, 0, angles='xy', scale_units='xy', scale=1, color='b', label="Fuerza en X" if node == nodes[0] else "")
+            ax.quiver(x, y, 1, 0, angles='xy', scale_units='xy', scale=1, color='b',
+                      label="Fuerza en X" if node == nodes[0] else "")
         if fy != 0:
-            ax.quiver(x, y, 0, -1, angles='xy', scale_units='xy', scale=1, color='r', label="Fuerza en Y" if node == nodes[0] else "")
+            ax.quiver(x, y, 0, -1, angles='xy', scale_units='xy', scale=1, color='r',
+                      label="Fuerza en Y" if node == nodes[0] else "")
 
         # Graficar momento como una flecha curva
         if m != 0:
@@ -74,11 +142,17 @@ def plot_original_structure_all_forces(nodes, elements):
             ax.add_patch(arc)
             ax.text(x + 0.25, y + 0.25, f'M={m:.2f}', fontsize=10, color='purple')
 
+    # Barra de color para indicar valores de área
+    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+    #cbar = plt.colorbar(sm, ax=ax)
+    #cbar.set_label("Área de la sección [mm²]")
+
     # Configuración del gráfico
     ax.set_xlabel("X [m]")
     ax.set_ylabel("Y [m]")
-    ax.set_title("Estructura Original con Nodos, Fuerzas y Momentos Aplicados")
-    ax.legend()
+    ax.set_title("Estructura Original con Colores según Área de la Sección")
+    #ax.legend()
     ax.axis("equal")
     plt.grid(True)
     plt.show()
