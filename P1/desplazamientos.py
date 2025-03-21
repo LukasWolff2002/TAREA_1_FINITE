@@ -61,6 +61,11 @@ class Desplazamientos:
                 if b == 1:
                     pass
                 else:
-                    node.def_vector[i] += self.uf_v[i]
+                    if i == len(node.boundary)-1:
+                        #El giro lo mantengo en radianes
+                        node.def_vector[i] += (self.uf_v[i])
+                    else:
+                        #Los desplazamientos los paso a mm
+                        node.def_vector[i] += (self.uf_v[i])/1000
                     
 

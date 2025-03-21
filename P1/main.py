@@ -60,7 +60,24 @@ secciones_piso = [[[300, 300], [100, 100], [100, 100]], #Piso 1
                   [[300, 300], [100, 100], [100, 100]]  #Piso 14
                   ]
 
-nodos_ancho = 6
+cargas_q = [26,
+            26,
+            0,
+            26,
+            26,
+            0,
+            26,
+            26,
+            0,
+            26,
+            26,
+            0,
+            26,
+            23.1]
+            
+            
+
+nodos_ancho = 3 #6
 pisos = 14
 
 base_v = 0
@@ -92,17 +109,15 @@ for j in range(1, pisos+1):
         #Defino elementos horizontales que conectan los ultimos nodos creados
         for i in range(nodos_ancho-1):
             nodos_actuales = len(nodes)
-            elements.append(Elements(nodes[nodos_actuales-(nodos_ancho) + i], nodes[nodos_actuales-nodos_ancho + i + 1 ], q=-1000))
+            elements.append(Elements(nodes[nodos_actuales-(nodos_ancho) + i], nodes[nodos_actuales-nodos_ancho + i + 1 ], q=-1000*cargas_q[j-1]))
 
     base_v = vertical
-    
+
 #Ahora tomo la masa total de la estructra
 
 M = Assembly(nodes, elements)
 
 Des = Desplazamientos(nodes, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
-
-
 
 # Ejecutar la función para graficar la estructura c on todas las fuerzas aplicadas
 plot_original_structure_all_forces(nodes, elements)
@@ -110,4 +125,7 @@ plot_original_structure_all_forces(nodes, elements)
 
 
 # Ejecutar la función para graficar la estructura desplazada con escala ajustable
-plot_deformed_structure(nodes, elements, scale=10)
+plot_deformed_structure(nodes, elements, scale=100)
+
+for node in nodes:
+    print(f"Nodo {node.n} - Desplazamientos: {node.def_vector}")
