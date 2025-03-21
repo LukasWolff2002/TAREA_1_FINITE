@@ -26,6 +26,9 @@ class Elements:
         self.k_global = self.global_matrix()
         self.k_global_tgo = self.global_tgo_matrix()
         self.Estructure_1()
+        self.ug = np.array([0, 0, 0, 0, 0, 0])
+        
+        
 
     def length_angle (self):
         length = (np.linalg.norm(self.coords_f - self.coords_i)) 
@@ -64,7 +67,7 @@ class Elements:
         
     def global_matrix (self):
         k = self.k_local
-        tgo = self.tgo
+        
 
         c = np.cos(self.angle)
         s = np.sin(self.angle)
@@ -76,10 +79,9 @@ class Elements:
                       [0, 0, 0, -s, c, 0],
                       [0, 0, 0, 0, 0, 1]])
         
-        Ke = T @ k @ T.T
-        Ke = tgo.T @ Ke @ tgo
+        Kg = T @ k @ T.T
         
-        return Ke
+        return Kg
     
     def global_tgo_matrix (self):
         k = self.k_local
@@ -117,6 +119,27 @@ class Elements:
             else:
                 self.n1.force_vector += np.array([0, v, -m])
                 self.n2.force_vector += np.array([0, v, m])
+
+    def local_displassments (self):
+        n1 = self.n1
+        n2 = self.n2
+
+        c = np.cos(self.angle)
+        s = np.sin(self.angle)
+
+        ul = np.array([n1.def_vector[0], n1.def_vector[1], n1.def_vector[2], 
+                       n2.def_vector[0], n2.def_vector[1], n2.def_vector[2]])
+
+        T = np.array([[c, s, 0, 0, 0, 0], 
+                      [-s, c, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, c, s, 0],
+                      [0, 0, 0, -s, c, 0],
+                      [0, 0, 0, 0, 0, 1]])
+
+        ug = T.T @ ul
+
+        return ug
 
         
  

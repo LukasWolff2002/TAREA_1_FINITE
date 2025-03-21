@@ -2,8 +2,9 @@ import numpy as np
 
 class Desplazamientos:
 
-    def __init__(self, nodes, kff, kfc, kcf, kcc):
+    def __init__(self, nodes, elements, kff, kfc, kcf, kcc):
         self.nodes = nodes
+        self.elements = elements
         self.kff = kff
         self.kfc = kfc
         self.kcf = kcf
@@ -70,6 +71,11 @@ class Desplazamientos:
                     else:
                         node.def_vector[i] += self.uf_v[contador]  # rotación, en radianes
                     contador += 1
+
+        for element in self.elements:
+            ug = element.local_displassments()
+            element.ug = ug
+      
 
 
 
