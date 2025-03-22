@@ -23,6 +23,7 @@ class Elements:
         self.L, self.angle = self.length_angle()
         self.kb = self.basic_matrix()
         self.k_local = self.local_matrix()
+        self.tlg = self.localGlobalTransformation()
         self.tgo = self.tgo_matrix()
         self.k_global = self.global_matrix()
         self.k_global_tgo = self.global_tgo_matrix()
@@ -78,6 +79,21 @@ class Elements:
                         [0, 0, 0, 0, 0, 1]])
         
         return tgo
+    
+    def localGlobalTransformation(self):
+        c = np.cos(self.angle)
+        s = np.sin(self.angle)
+
+        Tlg = np.array([
+        [ c, s, 0,  0, 0, 0],
+        [-s, c, 0,  0, 0, 0],
+        [ 0, 0, 1,  0, 0, 0],
+        [ 0, 0, 0,  c, s, 0],
+        [ 0, 0, 0, -s, c, 0],
+        [ 0, 0, 0,  0, 0, 1]
+        ])
+        return Tlg
+
         
     def global_matrix (self):
         k = self.k_local
@@ -95,7 +111,7 @@ class Elements:
         
         Kg = T @ k @ T.T
         
-        return Kg
+        return Kg, T
     
     def global_tgo_matrix (self):
         k = self.k_local
@@ -114,7 +130,7 @@ class Elements:
         Ke = T @ k @ T.T
         Ke = tgo.T @ Ke @ tgo
         
-        return Ke
+        return Ke, T
     
                       
     
@@ -133,6 +149,42 @@ class Elements:
             else:
                 self.n1.force_vector += np.array([0, v, -m])
                 self.n2.force_vector += np.array([0, v, m])
+
+
+    def _extractDisplacements(self, u): #Extraer los desplazamientos de los nodos
+        u_global = u[self.dof_indices].reshape((6, 1))  # 6 GDL por elemento
+        Tlg = self.localGlobalTransformation()
+        u_local = Tlg @ u_global
+        Tbl = self.basicLocalTransformation()
+        u_basic = Tbl @ u_local
+        return u_global, u_local, u_basic
+    
+    def _calculateBasicForces(self, u):
+        _, _, u_basic = self._extractDisplacements(u)
+        Kb = self.stiffness_matrix_basic()
+        f_basic = Kb @ u_basic
+        return f_basic
+
+
+    def _calculateLocalForces(self, u):
+        _, u_local, _ = self._extractDisplacements(u)
+        Kl = self.localStiffnessMatrix()
+        f_local = Kl @ u_local
+        return f_local
+
+    def forceRecovery(self, u, printSummary=True):
+        f_basic = self._calculateBasicForces(u)
+        f_local = self._calculateLocalForces(u)
+        Tlg = self.localGlobalTransformation()
+        f_global = Tlg.T @ f_local
+
+        if printSummary:
+            print("Fuerzas básicas:\n", f_basic)
+            print("Fuerzas locales:\n", f_local)
+            print("Fuerzas globales:\n", f_global)
+
+        return f_basic, f_local, f_global
+
 
     def local_displassments (self):
         n1 = self.n1
