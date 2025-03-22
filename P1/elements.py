@@ -35,6 +35,7 @@ class Elements:
         angle = np.arctan2(self.coords_f[1] - self.coords_i[1], self.coords_f[0] - self.coords_i[0])
 
         return length, angle
+    
 
     def local_matrix (self):
         L = self.L * 1000
@@ -52,9 +53,13 @@ class Elements:
         
         return k
     
+    def basic_matrix (self):
+        #Trabajar aqui
+        pass
+
     def tgo_matrix (self):
-        dx = self.L * np.cos(self.angle)
-        dy = self.L * np.sin(self.angle)
+        dx = 1
+        dy = 0
 
         tgo = np.array([[1, 0, -dy, 0, 0, 0],
                         [0, 1, dx, 0, 0, 0],

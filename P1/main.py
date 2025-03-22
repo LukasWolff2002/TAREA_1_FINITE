@@ -12,17 +12,17 @@ elements = []
 espaciado_h = 9.14 #m
 Espaciado_v = [3.66, 
                5.49, 
-               (3.96)/2, 
-               (3.96)/2, 
+               1.83, 
+               3.96 - 1.83, 
                3.96, 
-               (3.96)/2, 
-               (3.96/2), 
+               1.83, 
+               3.96 - 1.83, 
                3.96, 
-               (3.96)/2, 
-               (3.96/2), 
+               1.83, 
+               3.96 - 1.83, 
                3.96, 
-               (3.96)/2, 
-               (3.96/2),
+               1.83, 
+               3.96 - 1.83, 
                3.96]
 
 #Defino los pisos en que hay cambios de seccion
@@ -131,26 +131,21 @@ for j in range(1, pisos+1):
 
 #Ahora tomo la masa total de la estructra
 
-M = Assembly(nodes, elements)
-
-Des = Desplazamientos(nodes, elements, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
 # Ejecutar la función para graficar la estructura c on todas las fuerzas aplicadas
-#plot_original_structure_all_forces(nodes, elements)
+
 
 # Ejecutar la función para graficar la estructura desplazada con escala ajustable
 #plot_deformed_structure(nodes, elements, scale=50)
 
-M = Assembly(nodes, elements, fixed = False)
+M = Assembly(nodes, elements, fixed = True)
 
 Des = Desplazamientos(nodes, elements, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
+plot_original_structure_all_forces(nodes, elements)
 #plot_deformed_structure(nodes, elements, scale=50)
 
-
 # Ejecutar la función para graficar la estructura con las funciones de forma
-
-
 
 #plot_structure_with_local_displacements(nodes, elements, scale=50)
 import numpy as np
@@ -190,7 +185,7 @@ def plot_deformed_structure(nodes, elements, scale=1000):
         u1 = ug[3]  # Desplazamiento axial en el nodo 2
 
         L = element.L  # Longitud del elemento
-        x_local = np.linspace(0, L, 100)  # Puntos a lo largo de la longitud del elemento
+        x_local = np.linspace(0, L, 1000)  # Puntos a lo largo de la longitud del elemento
 
         # Funciones de forma para el comportamiento axial
         n0 = 1 - (x_local / L)
@@ -231,6 +226,7 @@ def plot_deformed_structure(nodes, elements, scale=1000):
         # Graficar la deformación combinada (axial + flexión) para este elemento
         # Asegurándonos de que los desplazamientos estén relativos a los nodos
         if xi == xf:  # Elemento vertical
+            print(yi)
             # Si el elemento es vertical, tratamos la deformación como si fuera horizontal
             # Primero, calculamos la deformación como si fuera un elemento horizontal
             x_deformed = xi + np.zeros_like(x_local)  # La coordenada X permanece constante
@@ -252,4 +248,4 @@ def plot_deformed_structure(nodes, elements, scale=1000):
 
 
 
-plot_deformed_structure(nodes, elements, scale=100)
+plot_deformed_structure(nodes, elements, scale=50)
