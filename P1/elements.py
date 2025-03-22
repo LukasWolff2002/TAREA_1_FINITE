@@ -15,12 +15,13 @@ class Elements:
         self.coords_i = n1.coord
         self.coords_f = n2.coord
         self.q = q
-        #self.E = E
+        self.E = E
         self.A = A[0]*A[1]
         self.I = A[0]*A[1]**3/12
         #self.L = L
 
         self.L, self.angle = self.length_angle()
+        self.kb = self.basic_matrix()
         self.k_local = self.local_matrix()
         self.tgo = self.tgo_matrix()
         self.k_global = self.global_matrix()
@@ -35,27 +36,35 @@ class Elements:
         angle = np.arctan2(self.coords_f[1] - self.coords_i[1], self.coords_f[0] - self.coords_i[0])
 
         return length, angle
-    
+
+    def basic_matrix(self):
+        L = self.L * 1000
+        A = self.A
+        E = self.E
+        I = self.I
+        
+        Kb = np.array([[A*E/L, 0, 0],
+                       [0, 4*E*I/L, 2*E*I/L],
+                       [0, 2*E*I/L, 4*E*I/L]])
+        
+        return Kb
 
     def local_matrix (self):
         L = self.L * 1000
         I = self.I
         A = self.A
         
+        Kb = self.kb
         
-        #Por lo tanto puedo definir mi matriz K en coordenadas globales
-        k = np.array([[(A*E)/L, 0, 0, -(A*E)/L, 0, 0],
-                      [0, (12*E*I)/(L**3), (6*E*I)/(L**2), 0, -(12*E*I)/(L**3), (6*E*I)/(L**2)],
-                      [0, (6*E*I)/(L**2), (4*E*I)/L, 0, -(6*E*I)/(L**2), (2*E*I)/L],
-                      [-(A*E)/L, 0, 0, (A*E)/L, 0, 0],
-                      [0, -(12*E*I)/(L**3), -(6*E*I)/(L**2), 0, (12*E*I)/(L**3), -(6*E*I)/(L**2)],
-                      [0, (6*E*I)/(L**2), (2*E*I)/L, 0, -(6*E*I)/(L**2), (4*E*I)/L]])
+        Tbl = np.array([
+            [-1, 0, 0, 1, 0, 0],
+            [0, 1/L, 1, 0, -1/L, 0],
+            [0, 1/L, 0, 0, -1/L, 1]
+            ]) 
         
-        return k
-    
-    def basic_matrix (self):
-        #Trabajar aqui
-        pass
+        Kl = Tbl.T @ Kb @ Tbl
+        
+        return Kl
 
     def tgo_matrix (self):
         dx = 1
