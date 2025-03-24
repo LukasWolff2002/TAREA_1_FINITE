@@ -1,6 +1,6 @@
 import numpy as np
 
-class Desplazamientos:
+class Solver:
 
     def __init__(self, nodes, elements, kff, kfc, kcf, kcc):
         self.nodes = nodes
@@ -72,12 +72,7 @@ class Desplazamientos:
                         node.def_vector[i] += self.uf_v[contador]  # rotación, en radianes
                     contador += 1
 
-        for element in self.elements:
-            ug = element.local_displassments()
-            element.ug = ug
       
-
-
 
 
                     
