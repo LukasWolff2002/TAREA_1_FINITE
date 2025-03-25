@@ -25,7 +25,7 @@ for node in structure_1.nodes:
     for i, b in enumerate(node.boundary):
         if b == 0:  # Solo si el GDL está libre
             if i == 0 or i == 1:
-                node.def_vector[i] += uf_v[contador]
+                node.def_vector[i] += uf_v[contador] /1000
             else:
                 node.def_vector[i] += uf_v[contador]  
             contador += 1
@@ -44,6 +44,8 @@ for element in structure_1.elements:
     #Por lo que ahora genero los vecotres desplazamiento
 
     element.extractDisplacements(u)
+
+    #element.plotGeometry(text=False, nodes=True, nodes_labels=False)
 
 
 
@@ -157,12 +159,15 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
             ax2.plot(x_def, y_def, deformada_color + '-', linewidth=linewidth)
 
             # Nodo i
-            p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_global[0:3]*escala, beam.offset_i_global*escala)
-            ax2.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], deformada_color + '-', linewidth=linewidth)
+            p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_global[0:3], beam.offset_i_global, escala)
+            ax2.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], offset_color, linewidth=linewidth)
 
             # Nodo j
-            p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_global[3:6]*escala, beam.offset_j_global*escala)
-            ax2.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], deformada_color + '-', linewidth=linewidth)
+            p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_global[3:6], beam.offset_j_global, escala)
+            ax2.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], offset_color, linewidth=linewidth)
+
+        #Dibujar los cachos rigidos deformados
+
 
     # Ajustes para gráficos
     ax1.set_aspect('equal')
@@ -184,4 +189,4 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
 
 
 
-plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=0.1)
+plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100)

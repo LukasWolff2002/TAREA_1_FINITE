@@ -179,7 +179,7 @@ class Elements:
                 self.n1.force_vector += np.array([0, v, -m])
                 self.n2.force_vector += np.array([0, v, m])
 
-    def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global):
+    def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
 
         ux, uy, theta = u_nodo
         p_deformado = nodo_real + np.array([ux, uy])
@@ -189,9 +189,11 @@ class Elements:
             [np.cos(theta), -np.sin(theta)],
             [np.sin(theta),  np.cos(theta)]
         ])
-        offset_rotado = R_theta @ offset_global
+        offset_rotado = (R_theta @ offset_global) 
+     
 
-        p_final = p_deformado + offset_rotado
+        p_final = p_deformado + offset_rotado 
+   
         return p_deformado, p_final
 
 
@@ -220,10 +222,13 @@ class Elements:
         # Guardar vector deformado como array de 2x2: [[xi, yi], [xf, yf]]
         self.u_corrected = np.array([p1i, p1j])
 
-    def plotGeometry(self, ax=None, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100000):
+    def plotGeometry(self, ax=None, text=False, nodes=True, nodes_labels=False, deformada=True, escala=0.1):
 
         if ax is None:
             fig, ax = plt.subplots()
+
+        fig.patch.set_facecolor('white')
+        ax.set_facecolor('white')
 
         # Coordenadas reales (nodos)
         xi_real, yi_real = self.coord_i
@@ -310,14 +315,16 @@ class Elements:
             ax.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], 'r--', linewidth=3)
 
         ax.set_aspect('equal')
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.grid(True)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        ax.grid(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
         # Mueve la leyenda fuera del gráfico, al lado derecho
         #ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
  
         
-        #plt.show()
+        plt.show()
 
 
 
