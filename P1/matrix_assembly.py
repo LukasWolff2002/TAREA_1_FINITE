@@ -23,7 +23,7 @@ class Assembly:
         #Ahora debo sumar los elementos de la matriz de rigides, en base a las matrices globales de cada elemento
         for element in self.elements:
 
-            k = element.k_global_tgo
+            k = element.ks_global
 
            
 

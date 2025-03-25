@@ -119,12 +119,12 @@ class Structure:
                     A = self.secciones_piso[j-1][0]
                 else:
                     A = self.secciones_piso[j-1][1]
-                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], A=A))
+                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], A=A, dxdy=[0.8, 0]))
 
             if self.losas[j-1] == 1:
                 #Defino elementos horizontales que conectan los ultimos nodos creados
                 for i in range(self.nodos_ancho-1):
                     nodos_actuales = len(self.nodes)
-                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], q=-1000*self.cargas_q[j-1]))
+                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], q=-1000*self.cargas_q[j-1], dxdy=[3, 0]))
 
             self.base_v = vertical
