@@ -79,11 +79,10 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
     ax2_legend = []
 
     # Estilos comunes para los gráficos
-    eje_color = 'k'  # Color para el eje total
     offset_color = 'orange'  # Color para los offsets rígidos
     elemento_color = 'b'  # Color para el elemento útil
     deformada_color = 'r'  # Color para la deformada
-    linewidth = 2  # Ancho de las líneas
+    linewidth = 1  # Ancho de las líneas
 
     # Recorrer cada beam y graficarlo
     for beam in beams:
@@ -94,16 +93,13 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
         # Coordenadas con offset (barra útil)
         xi, yi = beam.coord_i_offset
         xf, yf = beam.coord_f_offset
-
-        # 1. Eje total entre nodos reales (para la estructura original)
-        ax1.plot([xi_real, xf_real], [yi_real, yf_real], eje_color + '--', linewidth=linewidth)
         
         # 2. Offsets rígidos (para la estructura original)
         ax1.plot([xi_real, xi], [yi_real, yi], offset_color, linewidth=linewidth)
         ax1.plot([xf, xf_real], [yf, yf_real], offset_color, linewidth=linewidth)
 
         # 3. Elemento útil (sin deformación)
-        ax1.plot([xi, xf], [yi, yf], elemento_color + '-', linewidth=linewidth)
+        ax1.plot([xi, xf], [yi, yf], elemento_color , linewidth=linewidth)
 
         # 4. Nodos reales
         
@@ -117,7 +113,7 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
         if text:
             xm = (xi + xf) / 2
             ym = (yi + yf) / 2
-            ax1.text(xm, ym, f"L útil = {beam.L:.2f} m", fontsize=10, color='darkgreen', ha='center')
+            ax1.text(xm, ym, f"L útil = {beam.L:.2f} m", fontsize=10, color=elemento_color, ha='center')
 
         # 7. Dibujar deformada interpolada
         if deformada and beam.u_global is not None:
@@ -181,7 +177,7 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
     ax2.grid(True)
 
     # Leyenda unificada para toda la estructura
-    ax1.legend(['Eje total (entre nodos)', 'Offset rígido', 'Elemento útil'], loc='upper left', bbox_to_anchor=(1, 1))
+    ax1.legend(['Offset rígido', 'Elemento útil'], loc='upper left', bbox_to_anchor=(1, 1))
     ax2.legend(['Deformada (x{})'.format(escala), 'Offset rígido'], loc='upper left', bbox_to_anchor=(1, 1))
 
     plt.tight_layout()
@@ -189,4 +185,4 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
 
 
 
-plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100)
+plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=1000)

@@ -8,7 +8,7 @@ gamma = 7800 #Kg/m3
 
 class Elements:
 
-    def __init__ (self, n1, n2, AI_col, AI_vigas, q=0, dxdy = [0.0, 0.0], E=E):
+    def __init__ (self, n1, n2, AI, q=0, dxdy = [0.0, 0.0], E=E):
         #De base defino un area muy grande para las secciones que son axialmente rigidas
 
         self.n1 = n1
@@ -17,10 +17,8 @@ class Elements:
         self.coord_f = n2.coord
         self.q = q
         self.E = E
-        self.A_col = AI_col[0]
-        self.I_col = AI_col[1]
-        self.A_vigas = AI_vigas[0]
-        self.I_vigas = AI_vigas[1]
+        self.A = AI[0]
+        self.I = AI[1]
         self.dx = dxdy[0]
         self.dy = dxdy[1]
         self.L, self.angle = self.geometry()
@@ -34,9 +32,7 @@ class Elements:
         self.ts = self.transformationStiffnessMatrix()
         self.ks_global = self.global_ts_matrix()
         self.Estructure_1()
-        
     
-
     def geometry (self):
         coord_i_real = self.coord_i.copy()
         coord_f_real = self.coord_f.copy()
@@ -83,9 +79,9 @@ class Elements:
 
     def basic_matrix(self):
         L = self.L * 1000
-        A = self.A_col
+        A = self.A
         E = self.E
-        I = self.I_col
+        I = self.I
         
         Kb = np.array([[A*E/L, 0, 0],
                        [0, 4*E*I/L, 2*E*I/L],

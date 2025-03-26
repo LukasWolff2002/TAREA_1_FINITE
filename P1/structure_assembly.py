@@ -59,11 +59,22 @@ class Structure:
                         [[44193, 1252856592,26], [48774, 1415000000]]  #Piso 14
                         ]
 
-        self.secciones_vigas = [[30323, 4062418717.759], #W36x160
-                                [22387, 2456000000], #W33x118
-                        [22064, 2052000000], #W30x116
-                        [12968, 761703509.579], #W24x68
-                        ]
+        
+        #Defino los self.secciones_vigas en cada piso
+        self.secciones_vigas = [[30323, 4062418717.759], #Piso 1
+                [30323, 4062418717.759], #Piso 2
+                0, #Piso 3
+                [22064, 2052000000], #Piso 4
+                [12968, 761703509.579], #Piso 5
+                0, #Piso 6
+                [22064, 2052000000], #Piso 7
+                [12968, 761703509.579], #Piso 8
+                0, #Piso 9
+                [22064, 2052000000], #Piso 10
+                [12968, 761703509.579], #Piso 11
+                0, #Piso 12
+                [22064, 2052000000], #Piso 13
+                [12968, 761703509.579]] #Piso 14
 
         self.cargas_q = [26,
                     26,
@@ -119,17 +130,18 @@ class Structure:
             #Ahora conecto verticalmente los self.pisos
             for i in range(self.nodos_ancho):
                 if i == 0:
-                    A = self.secciones_piso[j-1][0]
+                    AI = self.secciones_piso[j-1][0]
                 elif i == self.nodos_ancho-1:
-                    A = self.secciones_piso[j-1][0]
+                    AI = self.secciones_piso[j-1][0]
                 else:
-                    A = self.secciones_piso[j-1][1]
-                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], A=A, dxdy=[0.8, 0]))
+                    AI = self.secciones_piso[j-1][1]
+                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], AI=AI, dxdy=[0.8, 0]))
 
             if self.losas[j-1] == 1:
+                AI = self.secciones_vigas[j-1]
                 #Defino elementos horizontales que conectan los ultimos nodos creados
                 for i in range(self.nodos_ancho-1):
                     nodos_actuales = len(self.nodes)
-                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], q=-1000*self.cargas_q[j-1], dxdy=[3, 0]))
+                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=-1000*self.cargas_q[j-1], dxdy=[3, 0]))
 
             self.base_v = vertical
