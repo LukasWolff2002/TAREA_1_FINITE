@@ -4,23 +4,32 @@ import matplotlib.pyplot as plt
 fc = 28
 E = 4700 * np.sqrt(fc)
 
-gamma = 7800 #Kg/m3
+gamma = 7800  # Kg/m3
 
 class Elements:
 
-    def __init__ (self, n1, n2, AI_col, AI_vigas, q=0, dxdy = [0.0, 0.0], E=E):
-        #De base defino un area muy grande para las secciones que son axialmente rigidas
-
+    def __init__(self, n1, n2, AI, q=0, dxdy=[0.0, 0.0], E=E):
+        """
+        Inicializa un elemento estructural (viga o columna).
+        
+        :param n1: Nodo 1 del elemento.
+        :param n2: Nodo 2 del elemento.
+        :param AI: [Área, momento de inercia] de la sección transversal.
+        :param q: Carga distribuida aplicada (si es el caso de una viga con carga).
+        :param dxdy: Desplazamientos relativos en los nodos en la dirección X y Y.
+        :param E: Módulo de elasticidad del material (por defecto, calculado con fc).
+        """
         self.n1 = n1
         self.n2 = n2
         self.coord_i = n1.coord
         self.coord_f = n2.coord
         self.q = q
         self.E = E
-        self.A_col = AI_col[0]
-        self.I_col = AI_col[1]
-        self.A_vigas = AI_vigas[0]
-        self.I_vigas = AI_vigas[1]
+        
+        # Asignación de área (A) y momento de inercia (I) desde el array AI
+        self.A = AI[0]
+        self.I = AI[1]
+        
         self.dx = dxdy[0]
         self.dy = dxdy[1]
         self.L, self.angle = self.geometry()
@@ -35,9 +44,10 @@ class Elements:
         self.ks_global = self.global_ts_matrix()
         self.Estructure_1()
         
-    
-
-    def geometry (self):
+    def geometry(self):
+        """
+        Calcula la longitud, dirección y ángulo del elemento.
+        """
         coord_i_real = self.coord_i.copy()
         coord_f_real = self.coord_f.copy()
 
@@ -53,8 +63,8 @@ class Elements:
                       [s,  c]])
 
         # Offsets locales independientes para cada nodo
-        offset_i_local = np.array([self.dx, self.dy])      # nodo i
-        offset_j_local = np.array([-self.dx, self.dy])     # nodo j (inverso en X local)
+        offset_i_local = np.array([self.dx, self.dy])  # Nodo i
+        offset_j_local = np.array([-self.dx, self.dy])  # Nodo j (inverso en X local)
 
         # Transformarlos a coordenadas globales
         offset_i_global = R @ offset_i_local
@@ -65,8 +75,6 @@ class Elements:
 
         self.L_offset_i = np.linalg.norm(offset_i_global)
         self.L_offset_j = np.linalg.norm(offset_j_global)
-
-
 
         # Aplicar a los extremos
         coord_i_offset = coord_i_real + offset_i_global
@@ -82,10 +90,13 @@ class Elements:
         return length_effective, angle
 
     def basic_matrix(self):
+        """
+        Calcula la matriz básica de rigidez para el elemento.
+        """
         L = self.L * 1000
-        A = self.A_col
+        A = self.A
         E = self.E
-        I = self.I_col
+        I = self.I
         
         Kb = np.array([[A*E/L, 0, 0],
                        [0, 4*E*I/L, 2*E*I/L],
@@ -94,15 +105,21 @@ class Elements:
         return Kb
     
     def basicLocalTransformation(self):
+        """
+        Calcula la transformación local → global para el elemento.
+        """
         L = self.L * 1000
         Tbl = np.array([
             [-1, 0, 0, 1, 0, 0],
             [0, 1/L, 1, 0, -1/L, 0],
             [0, 1/L, 0, 0, -1/L, 1]
-            ]) 
+        ]) 
         return Tbl
     
     def localGlobalTransformation(self):
+        """
+        Calcula la transformación local a global.
+        """
         c = np.cos(self.angle)
         s = np.sin(self.angle)
 
@@ -112,22 +129,25 @@ class Elements:
                         [ 0, 0, 0,  c, s, 0],
                         [ 0, 0, 0, -s, c, 0],
                         [ 0, 0, 0,  0, 0, 1]
-                        ])
+        ])
         return Tlg
 
-    def local_matrix (self):
-    
+    def local_matrix(self):
+        """
+        Calcula la matriz de rigidez local transformada.
+        """
         Tbl = self.tbl
         Kb = self.kb
         Kl = Tbl.T @ Kb @ Tbl
         
         return Kl
     
-
     def transformationStiffnessMatrix(self):
-        # Offsets en coordenadas locales
-        offset_i_local = np.array([self.dx, self.dy])     # Nodo i
-        offset_j_local = np.array([-self.dx, self.dy])    # Nodo j (inverso en X local)
+        """
+        Calcula la matriz de rigidez de la transformación.
+        """
+        offset_i_local = np.array([self.dx, self.dy])  # Nodo i
+        offset_j_local = np.array([-self.dx, self.dy])  # Nodo j (inverso en X local)
 
         # Transformación local → global
         offset_i_global = self.R @ offset_i_local
@@ -147,15 +167,20 @@ class Elements:
 
         return Ts
 
-        
-    def global_matrix (self):
+    def global_matrix(self):
+        """
+        Calcula la matriz de rigidez global del elemento.
+        """
         k = self.kl
         tlg = self.tlg
         Kg = tlg @ k @ tlg.T
         
         return Kg
     
-    def global_ts_matrix (self):
+    def global_ts_matrix(self):
+        """
+        Calcula la matriz global con transformación de rigidez.
+        """
         kg = self.k_global
         ts = self.ts
         
@@ -163,26 +188,26 @@ class Elements:
         
         return Ks
     
-                      
-    
     def Estructure_1(self):
+        """
+        Calcula las fuerzas internas debido a cargas distribuidas.
+        """
         if self.q != 0:
+            m = (self.q*self.L**2)/12  # Momento de carga distribuida
+            v = (self.q*self.L)/2     # Fuerza de carga distribuida
 
-            m = (self.q*self.L**2)/12 #
-            v = (self.q*self.L)/2 
-
-            #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
+            # Determinar cuál es el nodo de la izquierda y el de la derecha
             if self.n1.coord[0] < self.n2.coord[0]:
-                
                 self.n1.force_vector = self.n1.force_vector + np.array([0, v, m])
                 self.n2.force_vector = self.n2.force_vector + np.array([0, v, -m])
-            
             else:
                 self.n1.force_vector += np.array([0, v, -m])
                 self.n2.force_vector += np.array([0, v, m])
 
     def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
-
+        """
+        Calcula el efecto del desplazamiento y la rotación del elemento.
+        """
         ux, uy, theta = u_nodo
         p_deformado = nodo_real + np.array([ux, uy])
 
@@ -193,15 +218,13 @@ class Elements:
         ])
         offset_rotado = (R_theta @ offset_global) 
      
-
         p_final = p_deformado + offset_rotado 
-   
         return p_deformado, p_final
 
-
-    def extractDisplacements (self, u):
-        #Aqui el vector u es el vector de desplazamientos de los nodos
-      
+    def extractDisplacements(self, u):
+        """
+        Extrae los desplazamientos globales, locales y básicos de un elemento.
+        """
         u_global = u
         
         Tlg = self.tlg
@@ -214,18 +237,16 @@ class Elements:
         self.u_basic = u_basic
 
         # Calcular los extremos deformados del elemento útil
-        _, p1i = self.offset_rigido_deformado(
-            self.coord_i, u[0:3], self.offset_i_global
-        )
-        _, p1j = self.offset_rigido_deformado(
-            self.coord_f, u[3:6], self.offset_j_global
-        )
+        _, p1i = self.offset_rigido_deformado(self.coord_i, u[0:3], self.offset_i_global)
+        _, p1j = self.offset_rigido_deformado(self.coord_f, u[3:6], self.offset_j_global)
 
         # Guardar vector deformado como array de 2x2: [[xi, yi], [xf, yf]]
         self.u_corrected = np.array([p1i, p1j])
 
     def plotGeometry(self, ax=None, text=False, nodes=True, nodes_labels=False, deformada=True, escala=0.1):
-
+        """
+        Plotea la geometría del elemento y su deformación.
+        """
         if ax is None:
             fig, ax = plt.subplots()
 
@@ -305,38 +326,11 @@ class Elements:
 
             ax.plot(x_def, y_def, 'r--', linewidth=2)
 
-            # Escala
-            escala = escala
-
-            # Nodo i
-            p0i, p1i = self.offset_rigido_deformado(self.coord_i, u_global[0:3]*escala, self.offset_i_global*escala)
-            ax.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], 'r--', linewidth=3)
-
-            # Nodo j
-            p0j, p1j = self.offset_rigido_deformado(self.coord_f, u_global[3:6]*escala, self.offset_j_global*escala)
-            ax.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], 'r--', linewidth=3)
-
         ax.set_aspect('equal')
         ax.set_xlabel('')
         ax.set_ylabel('')
         ax.grid(False)
         ax.set_xticks([])
         ax.set_yticks([])
-        # Mueve la leyenda fuera del gráfico, al lado derecho
-        #ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
- 
-        
+
         plt.show()
-
-
-
-                
-
-
-    
-    
-    
-    
-
-
-    
