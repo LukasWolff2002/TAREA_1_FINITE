@@ -157,10 +157,40 @@ class Structure:
         self.peso_total = peso
 
     def Carga_lateral(self):
-        W = -self.peso_total*0.5
-        pisos = 10
-        w = W/(pisos)
+        
+        W = self.peso_total*0.5
+        L_total = np.sum(self.Espaciado_v)
 
-        for node in self.nodes:
-            
-            node.Lateral(w)
+        for i in range(self.elements):
+            L_elemento = self.elements[i].L
+            # Revisamos si el elemento es vertical y está en x=0
+            if self.elements[i].n1.coord[0] == 0 and self.elements[i].n2.coord[0] == 0:
+                #Revisamos si esta en la izquierda
+                if self.elements[i].n1.coord[1] < self.elements[i].n2.coord[1]:
+                    #n1 es izquierdo y n2 es derecho
+                    self.elements[i].q_tr = q_tr
+                    self.elements[i].q_cu = q_cu
+                    q_cu = L_elemento*(self.elements[i])
+                    q_tr = L_elemento*W/L_total
+                    M_n1 = q_tr*L_elemento**2/20
+                    V_n1 = 7*q_tr*L_elemento/20
+                    M_n2 = q_tr*L_elemento**2/30
+                    V_n2 = 3*q_tr*L_elemento/20
+                    
+                    if self.elements[i].n1.coord[1] == 0:
+                        
+                        self.elements.n1.force_vector += np.array([0, -V_n1, -M_n1])
+                        self.elements.n2.force_vector += np.array([0, -V_n2, M_n2])
+                        
+                    else:
+                        self.elements.n2.force_vector += np.array([0, -V_n1, -M_n1])
+                        self.elements.n1.force_vector += np.array([0, -V_n2, M_n2])
+                else:
+                    pass
+               
+         
+                        
+                
+    
+
+        

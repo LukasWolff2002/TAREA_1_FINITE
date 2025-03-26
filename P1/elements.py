@@ -165,7 +165,6 @@ class Elements:
         if self.n1.coord[0] == self.n2.coord[0]:
 
             #Es una columna
-            #Es una viga
             q = self.Peso
 
             n = ((q*self.L)/2)
@@ -189,6 +188,7 @@ class Elements:
            else:
                self.n1.force_vector += np.array([0, v, -m])
                self.n2.force_vector += np.array([0, v, m])
+        
 
     def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
 
