@@ -2,7 +2,7 @@ import numpy as np
 from solver import Solver
 from matrix_assembly import Assembly
 from structure_assembly import Structure
-from graph import plot_original_structure_all_forces, plot_deformed_structure, plot_structure_with_local_displacements
+from graph import plot_original_structure_all_forces
 import matplotlib.pyplot as plt
 
 structure_1 = Structure("Estructura 1")
@@ -80,7 +80,7 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
 
     # Estilos comunes para los gráficos
     offset_color = 'orange'  # Color para los offsets rígidos
-    elemento_color = 'b'  # Color para el elemento útil
+    elemento_color = 'blue'  # Color para el elemento útil
     deformada_color = 'r'  # Color para la deformada
     linewidth = 1  # Ancho de las líneas
 

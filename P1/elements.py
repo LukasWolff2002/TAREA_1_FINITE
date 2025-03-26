@@ -22,6 +22,7 @@ class Elements:
         self.dx = dxdy[0]
         self.dy = dxdy[1]
         self.L, self.angle = self.geometry()
+        self.Peso = None
 
         self.tbl = self.basicLocalTransformation()
         self.tlg = self.localGlobalTransformation()
@@ -39,6 +40,7 @@ class Elements:
 
         delta = coord_f_real - coord_i_real
         length_total = np.linalg.norm(delta)
+        self.Peso = length_total * (self.A/10000) * gamma * 9.81
         direction_unit = delta / length_total
         angle = np.arctan2(delta[1], delta[0])
 
@@ -180,7 +182,7 @@ class Elements:
     def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
 
         ux, uy, theta = u_nodo
-        p_deformado = nodo_real + np.array([ux, uy])
+        p_deformado = nodo_real + np.array([ux, uy]) 
 
         # Rotación del offset alrededor del nodo
         R_theta = np.array([
