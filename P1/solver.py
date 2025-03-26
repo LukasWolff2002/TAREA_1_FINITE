@@ -13,6 +13,7 @@ class Solver:
         self.uc = self.uc_vector()
         self.uf_v = self.uf_vector()
         self.rc_v = self.rc_vector()
+        self.node_elements_def_vector()
 
 
     def ff_vector(self):
@@ -56,6 +57,32 @@ class Solver:
 
         rc_v = self.kcf @ self.uf_v + self.kcc @ self.uc
         return rc_v
+    
+    def node_elements_def_vector (self):
+        contador = 0  # índice para self.uf_v
+
+        uf_v = self.uf_v
+
+        for node in self.nodes:
+            for i, b in enumerate(node.boundary):
+                if b == 0:  # Solo si el GDL está libre
+                    if i == 0 or i == 1:
+                        node.def_vector[i] += uf_v[contador] /1000
+                    else:
+                        node.def_vector[i] += uf_v[contador]  
+                    contador += 1
+
+        for element in self.elements:
+            #Con eso se cuales nodos conectan el elemento
+            #Por lo tanto, puedo ensamblar el vector del elemento
+
+            u = np.zeros(6)
+
+            u[0:3] = element.n1.def_vector
+            u[3:6] = element.n2.def_vector
+
+            element.extractDisplacements(u)
+
     
 
 

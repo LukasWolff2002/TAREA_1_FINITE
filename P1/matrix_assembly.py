@@ -44,7 +44,6 @@ class Assembly:
             o_matrix[n2.n*3:(n2.n+1)*3, n1.n*3:(n1.n+1)*3] += Q3  # Cuadrante inferior izquierdo en (n2, n1)
             o_matrix[n2.n*3:(n2.n+1)*3, n2.n*3:(n2.n+1)*3] += Q4  # Cuadrante inferior derecho en (n2, n2)
 
-
         return o_matrix
 
     def extraer_submatriz(self, fila_cond, col_cond):

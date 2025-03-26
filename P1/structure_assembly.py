@@ -4,8 +4,8 @@ from elements import Elements
 
 class Structure:
 
-    def __init__(self, name, dxdy):
-        self.name = name
+    def __init__(self, dxdy):
+
         self.dxdy = dxdy
         self.nodes = []
         self.elements = []
@@ -99,6 +99,7 @@ class Structure:
         self.base_v = 0
         self.assembly()
         self.calcular_peso_total()
+        self.Carga_lateral()
 
     def assembly (self):
         for i in range(self.nodos_ancho):
@@ -155,8 +156,11 @@ class Structure:
             peso += element.Peso
         self.peso_total = peso
 
-    def Carga_de_viento(self):
-        w = 1
+    def Carga_lateral(self):
+        W = -self.peso_total*0.5
+        pisos = 10
+        w = W/(pisos)
 
         for node in self.nodes:
-            node.Wind(w)
+            
+            node.Lateral(w)

@@ -195,13 +195,15 @@ class Elements:
         ux, uy, theta = u_nodo
         p_deformado = nodo_real + np.array([ux, uy]) 
 
+        #theta = theta * escala
+
         # Rotación del offset alrededor del nodo
         R_theta = np.array([
             [np.cos(theta), -np.sin(theta)],
             [np.sin(theta),  np.cos(theta)]
         ])
+
         offset_rotado = (R_theta @ offset_global) 
-     
 
         p_final = p_deformado + offset_rotado 
    
