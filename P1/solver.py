@@ -82,6 +82,7 @@ class Solver:
             u[3:6] = element.n2.def_vector
 
             element.extractDisplacements(u)
+            element.extractForces()
 
     
 

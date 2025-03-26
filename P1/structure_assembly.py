@@ -157,10 +157,10 @@ class Structure:
         self.peso_total = peso
 
     def Carga_lateral(self):
-        W = -self.peso_total*0.5
+        W = -self.peso_total*0.1
         pisos = 10
         w = W/(pisos)
 
         for node in self.nodes:
-            
-            node.Lateral(w)
+            pass
+            #node.Lateral(w)

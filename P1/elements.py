@@ -10,7 +10,7 @@ class Elements:
 
     def __init__ (self, n1, n2, AI, q=0, dxdy = [0.0, 0.0], E=E):
         #De base defino un area muy grande para las secciones que son axialmente rigidas
-
+        self.distribuida = False
         self.n1 = n1
         self.n2 = n2
         self.coord_i = n1.coord
@@ -164,12 +164,12 @@ class Elements:
 
         if self.n1.coord[0] == self.n2.coord[0]:
 
-            #Es una columna
-            #Es una viga
+        
             q = self.Peso
 
             n = ((q*self.L)/2)
-       
+            #No se considera como una carga distribuida
+            #Agrego las fuerzas normales en el eje y
             self.n1.force_vector = self.n1.force_vector + np.array([0, n, 0])
             self.n2.force_vector = self.n2.force_vector + np.array([0, n, 0])
             
@@ -180,6 +180,9 @@ class Elements:
            q = self.q + self.Peso
            m = (q*self.L**2)/12 #
            v = (q*self.L)/2 
+
+           #Indicio de distribuida del elemento es True
+           self.distribuida = True
            #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
            if self.n1.coord[0] < self.n2.coord[0]:
                
@@ -189,6 +192,8 @@ class Elements:
            else:
                self.n1.force_vector += np.array([0, v, -m])
                self.n2.force_vector += np.array([0, v, m])
+           
+           
 
     def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
 
@@ -234,6 +239,28 @@ class Elements:
 
         # Guardar vector deformado como array de 2x2: [[xi, yi], [xf, yf]]
         self.u_corrected = np.array([p1i, p1j])
+
+    def extractForces (self):
+
+        #Fuerza global
+        u_global = self.u_global
+        Kg = self.k_global
+        fg = Kg @ u_global
+        self.f_global = fg
+
+        #Fuerza local
+        u_local = self.u_local
+        Kl = self.kl
+        f_local = Kl @ u_local
+        self.f_local = f_local
+
+        #Fuerza basica
+        u_basic = self.u_basic
+        Kb = self.kb
+        f_basic = Kb @ u_basic
+        self.f_basic = f_basic
+
+
 
    
 
