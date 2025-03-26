@@ -5,9 +5,9 @@ from structure_assembly import Structure
 from graph import plot_original_structure_all_forces
 import matplotlib.pyplot as plt
 
-structure_1 = Structure("Estructura 1")
+structure_1 = Structure("Estructura 1", dxdy = [0.0, 0.0])
 
-#plot_original_structure_all_forces(structure_1.nodes, structure_1.elements)
+plot_original_structure_all_forces(structure_1.nodes, structure_1.elements)
 
 M = Assembly(structure_1.nodes, structure_1.elements)
 
@@ -57,17 +57,7 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 
 def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100000):
-    """
-    Función para graficar toda la estructura con todos los elementos (beams),
-    mostrando la estructura original en un subgráfico y solo la deformada en otro subgráfico.
-    
-    :param beams: Lista de objetos `Frame2DOffsets` que representan los beams de la estructura.
-    :param text: Indica si se debe mostrar el texto con la longitud útil.
-    :param nodes: Indica si se deben mostrar los nodos en el gráfico.
-    :param nodes_labels: Indica si se deben mostrar las etiquetas de los nodos.
-    :param deformada: Indica si se debe mostrar la deformación de los elementos.
-    :param escala: Factor de escala para la deformación.
-    """
+
     if not beams:
         raise ValueError("La lista de beams no puede estar vacía.")
     
@@ -154,12 +144,18 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
 
             ax2.plot(x_def, y_def, deformada_color + '-', linewidth=linewidth)
 
+            u_nodo_scaled = u_global[0:3]
+            u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
+
             # Nodo i
-            p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_global[0:3], beam.offset_i_global, escala)
+            p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_nodo_scaled, beam.offset_i_global, escala)
             ax2.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], offset_color, linewidth=linewidth)
 
+            u_nodo_scaled = u_global[3:]
+            u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
+
             # Nodo j
-            p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_global[3:6], beam.offset_j_global, escala)
+            p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_nodo_scaled, beam.offset_j_global, escala)
             ax2.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], offset_color, linewidth=linewidth)
 
         #Dibujar los cachos rigidos deformados
@@ -185,4 +181,6 @@ def plotStructure(beams, text=False, nodes=True, nodes_labels=False, deformada=T
 
 
 
-plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=1000)
+plotStructure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=50)
+
+print(structure_1.peso_total)

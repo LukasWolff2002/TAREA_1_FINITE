@@ -4,10 +4,12 @@ from elements import Elements
 
 class Structure:
 
-    def __init__(self, name):
+    def __init__(self, name, dxdy):
         self.name = name
+        self.dxdy = dxdy
         self.nodes = []
         self.elements = []
+        self.peso_total = None
         self.espaciado_h = 9.14 #m
         self.Espaciado_v = [3.66, 
                     5.49, 
@@ -96,6 +98,7 @@ class Structure:
         self.pisos = 14
         self.base_v = 0
         self.assembly()
+        self.calcular_peso_total()
 
     def assembly (self):
         for i in range(self.nodos_ancho):
@@ -135,13 +138,25 @@ class Structure:
                     AI = self.secciones_piso[j-1][0]
                 else:
                     AI = self.secciones_piso[j-1][1]
-                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], AI=AI, dxdy=[0.8, 0]))
+                self.elements.append(Elements(self.nodes[i+(j-1)*self.nodos_ancho], self.nodes[i+j*self.nodos_ancho], AI=AI, dxdy=self.dxdy))
 
             if self.losas[j-1] == 1:
                 AI = self.secciones_vigas[j-1]
                 #Defino elementos horizontales que conectan los ultimos nodos creados
                 for i in range(self.nodos_ancho-1):
                     nodos_actuales = len(self.nodes)
-                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=-1000*self.cargas_q[j-1], dxdy=[3, 0]))
+                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=-1000*self.cargas_q[j-1], dxdy=self.dxdy))
 
             self.base_v = vertical
+    
+    def calcular_peso_total(self):
+        peso = 0
+        for element in self.elements:
+            peso += element.Peso
+        self.peso_total = peso
+
+    def Carga_de_viento(self):
+        w = 1
+
+        for node in self.nodes:
+            node.Wind(w)

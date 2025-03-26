@@ -21,8 +21,7 @@ class Elements:
         self.I = AI[1]
         self.dx = dxdy[0]
         self.dy = dxdy[1]
-        self.L, self.angle = self.geometry()
-        self.Peso = None
+        self.L, self.angle, self.Peso = self.geometry()
 
         self.tbl = self.basicLocalTransformation()
         self.tlg = self.localGlobalTransformation()
@@ -40,7 +39,7 @@ class Elements:
 
         delta = coord_f_real - coord_i_real
         length_total = np.linalg.norm(delta)
-        self.Peso = length_total * (self.A/10000) * gamma * 9.81
+        Peso = -length_total * (self.A/1000000) * gamma * 9.81
         direction_unit = delta / length_total
         angle = np.arctan2(delta[1], delta[0])
 
@@ -77,7 +76,7 @@ class Elements:
         self.angle = angle
 
         length_effective = np.linalg.norm(coord_f_offset - coord_i_offset)
-        return length_effective, angle
+        return length_effective, angle, Peso
 
     def basic_matrix(self):
         L = self.L * 1000
@@ -159,25 +158,37 @@ class Elements:
         
         Ks = ts.T @ kg @ ts
         
-        return Ks
-    
-                      
+        return Ks              
     
     def Estructure_1(self):
-        if self.q != 0:
 
-            m = (self.q*self.L**2)/12 #
-            v = (self.q*self.L)/2 
+        if self.n1.coord[0] == self.n2.coord[0]:
 
-            #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
-            if self.n1.coord[0] < self.n2.coord[0]:
-                
-                self.n1.force_vector = self.n1.force_vector + np.array([0, v, m])
-                self.n2.force_vector = self.n2.force_vector + np.array([0, v, -m])
+            #Es una columna
+            #Es una viga
+            q = self.Peso
+
+            n = ((q*self.L)/2)
+       
+            self.n1.force_vector = self.n1.force_vector + np.array([0, n, 0])
+            self.n2.force_vector = self.n2.force_vector + np.array([0, n, 0])
             
-            else:
-                self.n1.force_vector += np.array([0, v, -m])
-                self.n2.force_vector += np.array([0, v, m])
+        
+        else:
+
+           #Es una viga
+           q = self.q + self.Peso
+           m = (q*self.L**2)/12 #
+           v = (q*self.L)/2 
+           #Ahora debo encontrar cual es el nodo de la izquierda y el de la derecha
+           if self.n1.coord[0] < self.n2.coord[0]:
+               
+               self.n1.force_vector = self.n1.force_vector + np.array([0, v, m])
+               self.n2.force_vector = self.n2.force_vector + np.array([0, v, -m])
+           
+           else:
+               self.n1.force_vector += np.array([0, v, -m])
+               self.n2.force_vector += np.array([0, v, m])
 
     def offset_rigido_deformado(self, nodo_real, u_nodo, offset_global, escala=1):
 
@@ -222,110 +233,7 @@ class Elements:
         # Guardar vector deformado como array de 2x2: [[xi, yi], [xf, yf]]
         self.u_corrected = np.array([p1i, p1j])
 
-    def plotGeometry(self, ax=None, text=False, nodes=True, nodes_labels=False, deformada=True, escala=0.1):
-
-        if ax is None:
-            fig, ax = plt.subplots()
-
-        fig.patch.set_facecolor('white')
-        ax.set_facecolor('white')
-
-        # Coordenadas reales (nodos)
-        xi_real, yi_real = self.coord_i
-        xf_real, yf_real = self.coord_f
-
-        # Coordenadas con offset (barra útil)
-        xi, yi = self.coord_i_offset
-        xf, yf = self.coord_f_offset
-
-        # 1. Eje total entre nodos reales
-        ax.plot([xi_real, xf_real], [yi_real, yf_real], 'k--', linewidth=1)
-
-        # 2. Offsets rígidos
-        ax.plot([xi_real, xi], [yi_real, yi], color='orange', linewidth=3)
-        ax.plot([xf, xf_real], [yf, yf_real], color='orange', linewidth=3)
-
-        # 3. Elemento útil (sin deformación)
-        ax.plot([xi, xf], [yi, yf], 'b-', linewidth=2)
-
-        # 4. Nodos reales
-        if nodes:
-            ax.plot(xi_real, yi_real, 'ro')
-            ax.plot(xf_real, yf_real, 'ro')
-
-        # 5. Etiquetas de nodo
-        if nodes_labels:
-            ax.text(xi_real, yi_real, f"i ({xi_real:.2f}, {yi_real:.2f})", fontsize=9, ha='right', va='bottom')
-            ax.text(xf_real, yf_real, f"f ({xf_real:.2f}, {yf_real:.2f})", fontsize=9, ha='left', va='top')
-
-        # 6. Texto del largo
-        if text:
-            xm = (xi + xf) / 2
-            ym = (yi + yf) / 2
-            ax.text(xm, ym, f"L útil = {self.L:.2f} m", fontsize=10, color='darkgreen', ha='center')
-
-            # 7. Dibujar deformada interpolada
-        if deformada and self.u_global is not None:
-            u_global = self.u_global.flatten()
-
-            # Transformar a coordenadas locales
-            u_local = self.tlg @ (self.ts @ u_global)
-
-            # Extraer grados de libertad locales
-            ui_x, ui_y, theta_i, uj_x, uj_y, theta_j = u_local
-
-            # Coordenadas locales a lo largo del eje
-            L = self.L
-            n_points = 50
-            x_vals = np.linspace(0, L, n_points)
-
-            # Interpolación en X (axial)
-            u_x_vals = (1 - x_vals / L) * ui_x + (x_vals / L) * uj_x
-
-            # Funciones de forma para flexión (en Y)
-            def N1(x): return 1 - 3*(x/L)**2 + 2*(x/L)**3
-            def N2(x): return x*(1 - x/L)**2
-            def N3(x): return 3*(x/L)**2 - 2*(x/L)**3
-            def N4(x): return -x*(x/L)*(1 - x/L)
-
-            v_vals = [N1(x)*ui_y + N2(x)*theta_i*L + N3(x)*uj_y + N4(x)*theta_j*L for x in x_vals]
-
-            # Puntos locales deformados (X + Y interpolado)
-            points_local = np.vstack([u_x_vals, v_vals]) * escala + np.vstack([x_vals, np.zeros_like(x_vals)])
-
-            # Transformar a coordenadas globales
-            points_global = self.R @ points_local
-
-            # Trasladar al sistema global real
-            x0, y0 = self.coord_i_offset
-            x_def = points_global[0, :] + x0
-            y_def = points_global[1, :] + y0
-
-            ax.plot(x_def, y_def, 'r--', linewidth=2)
-
-            # Escala
-            escala = escala
-
-            # Nodo i
-            p0i, p1i = self.offset_rigido_deformado(self.coord_i, u_global[0:3]*escala, self.offset_i_global*escala)
-            ax.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], 'r--', linewidth=3)
-
-            # Nodo j
-            p0j, p1j = self.offset_rigido_deformado(self.coord_f, u_global[3:6]*escala, self.offset_j_global*escala)
-            ax.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], 'r--', linewidth=3)
-
-        ax.set_aspect('equal')
-        ax.set_xlabel('')
-        ax.set_ylabel('')
-        ax.grid(False)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        # Mueve la leyenda fuera del gráfico, al lado derecho
-        #ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
- 
-        
-        plt.show()
-
+   
 
 
                 
