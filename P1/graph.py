@@ -145,14 +145,14 @@ def plot_deformed_structure(beams, text=False, nodes=True, nodes_labels=False, d
             ax2.plot(x_def, y_def, deformada_color + '-', linewidth=linewidth)
 
             u_nodo_scaled = u_global[0:3]
-            u_nodo_scaled[:2] *= escala  # solo desplazamientos, no rotación
+            u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
 
             # Nodo i
             p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_nodo_scaled, beam.offset_i_global, escala)
             ax2.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], offset_color, linewidth=linewidth)
 
             u_nodo_scaled = u_global[3:]
-            u_nodo_scaled[:2] *= escala  # solo desplazamientos, no rotación
+            u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
 
             # Nodo j
             p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_nodo_scaled, beam.offset_j_global, escala)
@@ -181,9 +181,10 @@ def plot_deformed_structure(beams, text=False, nodes=True, nodes_labels=False, d
 
 
 def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=True):
-    """
-    Dibuja la estructura sin deformar con diagramas de momento flector.
 
+    """
+    Dibuja el diagrama de momento flector a partir del diagrama de corte.
+    
     :param beams: Lista de objetos Elements.
     :param escala_momentos: Escala visual para el momento flector.
     :param show_structure: Si True, se grafica también la estructura sin deformar.
@@ -199,27 +200,19 @@ def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=T
         L = beam.L
 
         # Asegurarse de tener fuerzas internas
-        if not hasattr(beam, "f_basic"):
+        if not hasattr(beam, "f_local"):
             beam.extractForces()
 
-        M1 = beam.f_basic[1]  # Momento en el nodo inicial
-        M2 = beam.f_basic[2]  # Momento en el nodo final
+        V1 = beam.f_local[1]  # Fuerza cortante en el nodo i
+        V2 = beam.f_local[4]  # Fuerza cortante en el nodo j
 
-        # Si la carga es distribuida, calculamos la parábola
-        if getattr(beam, "distribuida", False) and abs(L) > 1e-6:
-            # El momento máximo debe ser opuesto a los extremos
-            M_max = -M1 / 2  # El momento máximo en el centro
+        # Interpolación de la fuerza cortante
+        x_local = np.linspace(0, L, 100)
+        V_vals = (1 - x_local / L) * V1 + (x_local / L) * V2  # Interpolación lineal de corte
 
-            # Crear una parábola que va de M1 a M_max en el centro y de M_max a M2 en el otro extremo
-            x_local = np.linspace(0, L, 100)
-
-            # La parábola pasará por M1 en x=0, M_max en x=L/2, y M2 en x=L
-            M_vals = M1 + (M_max - M1) * (x_local / (L / 2))**2  # Parábola de momento
-
-        else:
-            # Para cargas puntuales o no distribuidas, usamos interpolación lineal
-            x_local = np.linspace(0, L, 100)
-            M_vals = (1 - x_local / L) * M1 + (x_local / L) * M2  # Interpolación lineal
+        # Integrar la fuerza cortante para obtener el diagrama de momento
+        M_vals = np.cumsum(V_vals) * (x_local[1] - x_local[0])  # Aproximación de la integral
+        M_vals -= M_vals[0]  # Ajustar para que M(x=0) = 0, o usar M1 si es necesario
 
         # Transformar a coordenadas globales
         y_local = -M_vals * escala_momentos  # Convención positiva hacia arriba
@@ -229,7 +222,7 @@ def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=T
         y_global = points_global[1, :] + yi
 
         # Dibujar el diagrama de momento
-        ax.plot(x_global, y_global, color='purple', linewidth=2, label='Momento' if beam == beams[0] else "")
+        ax.plot(x_global, y_global, color='purple', linewidth=2, label='Momento (de corte)' if beam == beams[0] else "")
 
         if show_structure:
             ax.plot([xi, xf], [yi, yf], 'b-', linewidth=1)
@@ -237,18 +230,13 @@ def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=T
             ax.plot(*beam.coord_f, 'ro')
 
         # Marcar extremos con el signo adecuado
-        ax.text(x_global[0], y_global[0], f'{M1:.1f}', fontsize=8, color='purple', ha='right')
-        ax.text(x_global[-1], y_global[-1], f'{M2:.1f}', fontsize=8, color='purple', ha='left')
-
-        # Si es una viga con carga distribuida, marcar el máximo
-        if getattr(beam, "distribuida", False):
-            M_max_x = L / 2  # El máximo está en el centro
-            ax.text(M_max_x + xi, M_max * escala_momentos + yi, f'{M_max:.1f}', fontsize=8, color='darkred', ha='center')
+        #ax.text(x_global[0], y_global[0], f'{M_vals[0]:.1f}', fontsize=8, color='purple', ha='right')
+        #ax.text(x_global[-1], y_global[-1], f'{M_vals[-1]:.1f}', fontsize=8, color='purple', ha='left')
 
     ax.set_aspect('equal')
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
-    ax.set_title("Diagrama de momento flector")
+    ax.set_title("Diagrama de momento flector (calculado a partir de corte)")
     ax.grid(True)
     ax.legend()
     plt.tight_layout()
