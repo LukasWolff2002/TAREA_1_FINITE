@@ -161,6 +161,11 @@ class Structure:
         W = self.peso_total*0.5
         L_total = np.sum(self.Espaciado_v)
 
+        M_n1 = 0
+        M_n2 = 0
+        V_n1 = 0
+        V_n2 = 0
+        
         for i in range(self.elements):
             L_elemento = self.elements[i].L
             # Revisamos si el elemento es vertical y está en x=0
@@ -168,14 +173,14 @@ class Structure:
                 #Revisamos si esta en la izquierda
                 if self.elements[i].n1.coord[1] < self.elements[i].n2.coord[1]:
                     #n1 es izquierdo y n2 es derecho
-                    self.elements[i].q_tr = q_tr
-                    self.elements[i].q_cu = q_cu
-                    q_cu = L_elemento*(self.elements[i])
-                    q_tr = L_elemento*W/L_total
-                    M_n1 = q_tr*L_elemento**2/20
-                    V_n1 = 7*q_tr*L_elemento/20
-                    M_n2 = q_tr*L_elemento**2/30
-                    V_n2 = 3*q_tr*L_elemento/20
+                    self.elements[i].q_triangular = q_triangular
+                    self.elements[i].q_cuadrada = q_cuadrada
+                    q_cuadrada = L_elemento*(self.elements[i])
+                    q_triangular = L_elemento*W/L_total
+                    M_n1 = (q_triangular*L_elemento**2/20) - M_n1
+                    V_n1 = 7*q_triangular*L_elemento/20 - V_n1
+                    M_n2 = q_triangular*L_elemento**2/30 - M_n2
+                    V_n2 = 3*q_triangular*L_elemento/20 - V_n2
                     
                     if self.elements[i].n1.coord[1] == 0:
                         
