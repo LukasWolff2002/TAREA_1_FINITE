@@ -56,6 +56,110 @@ def plot_original_structure_all_forces(nodes, elements):
     plt.grid(True)
     plt.show()
 
+def plot_deformed_structures(structure_list, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100000):
+    
+    beams_list = []
+
+    for structure in structure_list:
+        beams_list.append(structure.elements)
+        
+    # Crear los subgráficos
+    fig, axes = plt.subplots(1, len(beams_list), figsize=(18, 6))  # Ajustar tamaño basado en número de estructuras
+
+    # Si solo hay una estructura, `axes` es un solo objeto, así que lo convertimos en una lista
+    if len(beams_list) == 1:
+        axes = [axes]
+
+    # Estilos comunes para los gráficos
+    offset_color = 'orange'  # Color para los offsets rígidos
+    elemento_color = 'blue'  # Color para el elemento útil
+    deformada_color = 'r'  # Color para la deformada
+    linewidth = 1  # Ancho de las líneas
+
+    for i, beams in enumerate(beams_list):
+
+        ax = axes[i]  # Seleccionar el gráfico correspondiente para esta estructura
+
+        # Recorrer cada beam y graficarlo
+        for beam in beams:
+            # Coordenadas reales (nodos)
+            xi_real, yi_real = beam.coord_i
+            xf_real, yf_real = beam.coord_f
+
+            # Coordenadas con offset (barra útil)
+            xi, yi = beam.coord_i_offset
+            xf, yf = beam.coord_f_offset
+            
+            # 7. Dibujar deformada interpolada
+            if deformada and beam.u_global is not None:
+                u_global = beam.u_global.flatten()
+
+                # Transformar a coordenadas locales
+                u_local = beam.tlg @ (beam.ts @ u_global)
+
+                # Extraer grados de libertad locales
+                ui_x, ui_y, theta_i, uj_x, uj_y, theta_j = u_local
+
+                # Coordenadas locales a lo largo del eje
+                L = beam.L
+
+                theta_i = theta_i / L
+                theta_j = theta_j / L
+
+                n_points = 50
+                x_vals = np.linspace(0, L, n_points)
+
+                # Interpolación en X (axial)
+                u_x_vals = (1 - x_vals / L) * ui_x + (x_vals / L) * uj_x
+
+                # Funciones de forma para flexión (en Y)
+                def N1(x): return 1 - 3*(x/L)**2 + 2*(x/L)**3
+                def N2(x): return x*(1 - x/L)**2
+                def N3(x): return 3*(x/L)**2 - 2*(x/L)**3
+                def N4(x): return -x*(x/L)*(1 - x/L)
+
+                v_vals = [N1(x)*ui_y + N2(x)*theta_i*L + N3(x)*uj_y + N4(x)*theta_j*L for x in x_vals]
+
+                # Puntos locales deformados (X + Y interpolado)
+                points_local = np.vstack([u_x_vals, v_vals]) * escala + np.vstack([x_vals, np.zeros_like(x_vals)])
+
+                # Transformar a coordenadas globales
+                points_global = beam.R @ points_local
+
+                # Trasladar al sistema global real
+                x0, y0 = beam.coord_i_offset
+                x_def = points_global[0, :] + x0
+                y_def = points_global[1, :] + y0
+
+                ax.plot(x_def, y_def, deformada_color + '-', linewidth=linewidth)
+                u_nodo_scaled = u_global[0:3]
+                u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
+
+                # Nodo i
+                p0i, p1i = beam.offset_rigido_deformado(beam.coord_i, u_nodo_scaled, beam.offset_i_global, escala)
+                ax.plot([p0i[0], p1i[0]], [p0i[1], p1i[1]], offset_color, linewidth=linewidth)
+
+                u_nodo_scaled = u_global[3:]
+                u_nodo_scaled[:3] *= escala  # solo desplazamientos, no rotación
+
+                # Nodo j
+                p0j, p1j = beam.offset_rigido_deformado(beam.coord_f, u_nodo_scaled, beam.offset_j_global, escala)
+                ax.plot([p0j[0], p1j[0]], [p0j[1], p1j[1]], offset_color, linewidth=linewidth)
+
+            #Dibujar los cachos rigidos deformados
+
+
+        # Ajustes para gráficos
+        ax.set_aspect('equal')
+        ax.set_xlabel('X (m)')
+        ax.set_ylabel('Y (m)')
+        ax.grid(True)
+
+        #ax.legend(['Deformada (x{})'.format(escala), 'Offset rígido'], loc='upper left', bbox_to_anchor=(1, 1))
+
+    plt.tight_layout()
+    plt.show()
+
 def plot_deformed_structure(beams, text=False, nodes=True, nodes_labels=False, deformada=True, escala=100000):
 
     if not beams:
@@ -115,8 +219,13 @@ def plot_deformed_structure(beams, text=False, nodes=True, nodes_labels=False, d
             # Extraer grados de libertad locales
             ui_x, ui_y, theta_i, uj_x, uj_y, theta_j = u_local
 
-            # Coordenadas locales a lo largo del eje
             L = beam.L
+
+            theta_i = theta_i / L
+            theta_j = theta_j / L
+
+            # Coordenadas locales a lo largo del eje
+            
             n_points = 50
             x_vals = np.linspace(0, L, n_points)
 
@@ -203,8 +312,17 @@ def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=T
         if not hasattr(beam, "f_local"):
             beam.extractForces()
 
-        V1 = beam.f_local[1]  # Fuerza cortante en el nodo i
-        V2 = beam.f_local[4]  # Fuerza cortante en el nodo j
+        if xi == xf:
+            #Tengo un elemento vertical
+
+            # Fuerzas cortantes locales
+            V1 = -beam.f_local[1] 
+            V2 = beam.f_local[4] 
+        
+        else:
+            # Fuerzas cortantes locales
+            V1 = -beam.f_local[0]
+            V2 = -beam.f_local[3]
 
         # Interpolación de la fuerza cortante
         x_local = np.linspace(0, L, 100)
@@ -268,9 +386,17 @@ def plotStructureWithShearDiagram(beams, escala_corte=1e-4, show_structure=True)
         if not hasattr(beam, "f_local"):
             beam.extractForces()
 
-        # Fuerzas cortantes locales
-        V1 = beam.f_local[1]
-        V2 = beam.f_local[4]
+        if xi == xf:
+            #Tengo un elemento vertical
+
+            # Fuerzas cortantes locales
+            V1 = beam.f_local[1] 
+            V2 = -beam.f_local[4] 
+        
+        else:
+            # Fuerzas cortantes locales
+            V1 = beam.f_local[0]
+            V2 = beam.f_local[3]
 
         # Coordenadas locales a lo largo del eje
         x_local = np.linspace(0, L, 50)

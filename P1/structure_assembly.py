@@ -4,8 +4,8 @@ from elements import Elements
 
 class Structure:
 
-    def __init__(self, dxdy):
-
+    def __init__(self, dxdy, caso):
+        self.caso = caso
         self.dxdy = dxdy
         self.nodes = []
         self.elements = []
@@ -114,10 +114,10 @@ class Structure:
             if j == 1:
                 for i in range(self.nodos_ancho):
                     if i == 0:
-                        self.nodes.append(Node(i+j*self.nodos_ancho, np.array([i*self.espaciado_h, vertical]), np.array([1, 1, 0]), np.array([0.0, 0.0, 0.0])))
+                        self.nodes.append(Node(i+j*self.nodos_ancho, np.array([i*self.espaciado_h, vertical]), np.array([1, 0, 0]), np.array([0.0, 0.0, 0.0])))
 
                     elif i == self.nodos_ancho-1:
-                        self.nodes.append(Node(i+j*self.nodos_ancho, np.array([i*self.espaciado_h, vertical]), np.array([1, 1, 0]), np.array([0.0, 0.0, 0.0])))
+                        self.nodes.append(Node(i+j*self.nodos_ancho, np.array([i*self.espaciado_h, vertical]), np.array([1, 0, 0]), np.array([0.0, 0.0, 0.0])))
 
                     else:
                         self.nodes.append(Node(i+j*self.nodos_ancho, np.array([i*self.espaciado_h, vertical]), np.array([0, 0, 0]), np.array([0.0, 0.0, 0.0])))
@@ -146,7 +146,7 @@ class Structure:
                 #Defino elementos horizontales que conectan los ultimos nodos creados
                 for i in range(self.nodos_ancho-1):
                     nodos_actuales = len(self.nodes)
-                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=-1000*self.cargas_q[j-1], dxdy=self.dxdy))
+                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=self.cargas_q[j-1], dxdy=self.dxdy))
 
             self.base_v = vertical
     
@@ -157,10 +157,94 @@ class Structure:
         self.peso_total = peso
 
     def Carga_lateral(self):
-        W = -self.peso_total*0.1
-        pisos = 10
-        w = W/(pisos)
+        
+        W = self.peso_total*0.5
+        Largo_total = np.sum(self.Espaciado_v[1:])
 
-        for node in self.nodes:
-            pass
-            #node.Lateral(w)
+        q = W/Largo_total
+
+        if self.caso == 'b':
+
+            for element in self.elements:
+
+                # Revisamos si el elemento es vertical y está en x=0
+                if element.n1.coord[0] == 0 and element.n2.coord[0] == 0:
+                    #Revisamos si esta en la izquierda
+                    if element.n1.coord[1] < element.n2.coord[1]:
+
+                        if element.n1.coord[1] != 0 and element.n2.coord[1] != 0:
+
+                            largo = element.L
+
+                            m_rect_izq = (q*largo**2)/12
+                            m_rect_der = -(q*largo**2)/12
+                            
+                            v_rect_izq = -(q*largo)/2
+                            v_rect_der = -(q*largo)/2
+
+                            #Identificamos el elemento izquiero
+
+                            if element.n1.coord[1] < element.n2.coord[1]:
+                                element.n1.force_vector += np.array([v_rect_izq, 0,m_rect_izq])
+                                element.n2.force_vector += np.array([v_rect_der, 0,m_rect_der])
+
+                            else:
+                                element.n1.force_vector += np.array([v_rect_der, 0,m_rect_der])
+                                element.n2.force_vector += np.array([v_rect_izq, 0,m_rect_izq])
+
+                            element.distribuida = True
+
+        if self.caso == 'c':
+
+            w = (2*W)/Largo_total
+
+            for element in self.elements:
+
+                # Revisamos si el elemento es vertical y está en x=0
+                if element.n1.coord[0] == 0 and element.n2.coord[0] == 0:
+                    #Revisamos si esta en la izquierda
+                    if element.n1.coord[1] < element.n2.coord[1]:
+
+                        if element.n1.coord[1] != 0 and element.n2.coord[1] != 0:
+                        
+                            altura_base = min(element.n1.coord[1], element.n2.coord[1]) - self.Espaciado_v[0]
+                            largo = element.L
+
+                            y1 = (altura_base*w)/Largo_total
+                            y2 = ((largo+altura_base)*w)/Largo_total
+
+                            y_triangulo = y2-y2
+
+                            #Agreguemos las cargas constantes
+
+                            m_rect_izq = (y1*largo**2)/12
+                            m_rect_der = -(y1*largo**2)/12
+                            
+                            v_rect_izq = -(y1*largo)/2
+                            v_rect_der = -(y1*largo)/2
+
+                            m_triang_izq = (y_triangulo*largo**2)/30
+                            m_triang_der = -(y_triangulo*largo**2)/20
+
+                            v_tring_izq = -(3*y_triangulo*largo)/20
+                            v_tring_der = -(7*y_triangulo*largo)/20
+
+                            #Identificamos el elemento izquiero
+
+                            if element.n1.coord[1] < element.n2.coord[1]:
+                                element.n1.force_vector += np.array([v_rect_izq + v_tring_izq, 0, m_rect_izq + m_triang_izq])
+                                element.n2.force_vector += np.array([v_rect_der + v_tring_der, 0, m_rect_der + m_triang_der])
+
+                            else:
+                                element.n1.force_vector += np.array([v_rect_der + v_tring_der, 0, m_rect_der + m_triang_der])
+                                element.n2.force_vector += np.array([v_rect_izq + v_tring_izq, 0, m_rect_izq + m_triang_izq])
+
+                            #Defino que el elemento tiene una carga distribuida
+                            element.distribuida = True
+
+
+
+
+
+                        
+                    

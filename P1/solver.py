@@ -67,7 +67,7 @@ class Solver:
             for i, b in enumerate(node.boundary):
                 if b == 0:  # Solo si el GDL está libre
                     if i == 0 or i == 1:
-                        node.def_vector[i] += uf_v[contador] /1000
+                        node.def_vector[i] += uf_v[contador] 
                     else:
                         node.def_vector[i] += uf_v[contador]  
                     contador += 1

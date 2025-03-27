@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 fc = 28
-E = 200000
+E = 200000 * (1000*1000)
 
 gamma = 7800 #Kg/m3
 
@@ -17,8 +17,8 @@ class Elements:
         self.coord_f = n2.coord
         self.q = q
         self.E = E
-        self.A = AI[0]
-        self.I = AI[1]
+        self.A = AI[0]/(1000*1000) #m2
+        self.I = AI[1]/(1000*1000*1000*1000) #m4
         self.dx = dxdy[0]
         self.dy = dxdy[1]
         self.L, self.angle, self.Peso = self.geometry()
@@ -39,7 +39,7 @@ class Elements:
 
         delta = coord_f_real - coord_i_real
         length_total = np.linalg.norm(delta)
-        Peso = -length_total * (self.A/1000000) * gamma * 9.81
+        Peso = -length_total * (self.A) * gamma * 9.81
         direction_unit = delta / length_total
         angle = np.arctan2(delta[1], delta[0])
 
@@ -79,7 +79,7 @@ class Elements:
         return length_effective, angle, Peso
 
     def basic_matrix(self):
-        L = self.L * 1000
+        L = self.L 
         A = self.A
         E = self.E
         I = self.I
@@ -91,7 +91,7 @@ class Elements:
         return Kb
     
     def basicLocalTransformation(self):
-        L = self.L * 1000
+        L = self.L 
         Tbl = np.array([
             [-1, 0, 0, 1, 0, 0],
             [0, 1/L, 1, 0, -1/L, 0],
