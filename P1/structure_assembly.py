@@ -146,7 +146,7 @@ class Structure:
                 #Defino elementos horizontales que conectan los ultimos nodos creados
                 for i in range(self.nodos_ancho-1):
                     nodos_actuales = len(self.nodes)
-                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=self.cargas_q[j-1], dxdy=self.dxdy))
+                    self.elements.append(Elements(self.nodes[nodos_actuales-(self.nodos_ancho) + i], self.nodes[nodos_actuales-self.nodos_ancho + i + 1 ], AI = AI, q=-1000*self.cargas_q[j-1], dxdy=self.dxdy))
 
             self.base_v = vertical
     
