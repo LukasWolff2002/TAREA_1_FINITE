@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 fc = 28
-E = 4700 * np.sqrt(fc)
+E = 200000
 
 gamma = 7800 #Kg/m3
 
