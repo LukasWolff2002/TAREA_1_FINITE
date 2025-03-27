@@ -153,10 +153,12 @@ def plot_deformed_structures(structure_list, text=False, nodes=True, nodes_label
         ax.set_aspect('equal')
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
+        titulo = structure_list[i].nombre
+        ax.set_title(f"{str(titulo)} - Escala: {escala}:1")
         ax.grid(True)
 
         #ax.legend(['Deformada (x{})'.format(escala), 'Offset rígido'], loc='upper left', bbox_to_anchor=(1, 1))
-
+    plt.suptitle("Estructuras deformadas",fontsize=20)
     plt.tight_layout()
     plt.show()
 

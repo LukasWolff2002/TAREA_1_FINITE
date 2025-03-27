@@ -4,7 +4,8 @@ from elements import Elements
 
 class Structure:
 
-    def __init__(self, dxdy, caso):
+    def __init__(self, nombre, dxdy, caso):
+        self.nombre = nombre
         self.caso = caso
         self.dxdy = dxdy
         self.nodes = []

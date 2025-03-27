@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 #Sin offsets
 #---------------------------------
 
-structure_1 = Structure(dxdy = [0, 0.0], caso='a')
-structure_2 = Structure(dxdy = [0, 0.0], caso='b')
-structure_3 = Structure(dxdy = [0, 0.0], caso='c')
+structure_1 = Structure(nombre='Caso A, sin offsets rigidos',dxdy = [0, 0.0], caso='a')
+structure_2 = Structure(nombre='Caso B, sin offsets rigidos',dxdy = [0, 0.0], caso='b')
+structure_3 = Structure(nombre='Caso C, sin offsets rigidos',dxdy = [0, 0.0], caso='c')
 
 
 M = Assembly(structure_1.nodes, structure_1.elements)
@@ -24,9 +24,9 @@ Solver(structure_2.nodes, structure_2.elements, M.kff_matrix, M.kfc_matrix, M.kc
 M = Assembly(structure_3.nodes, structure_3.elements)
 Solver(structure_3.nodes, structure_3.elements, M.kff_matrix, M.kfc_matrix, M.kcf_matrix, M.kcc_matrix)
 
-plot_original_structure_all_forces(structure_1.nodes, structure_1.elements)
-plot_original_structure_all_forces(structure_2.nodes, structure_2.elements)
-plot_original_structure_all_forces(structure_3.nodes, structure_3.elements)
+#plot_original_structure_all_forces(structure_1.nodes, structure_1.elements)
+#plot_original_structure_all_forces(structure_2.nodes, structure_2.elements)
+#plot_original_structure_all_forces(structure_3.nodes, structure_3.elements)
 
 #plot_deformed_structure(structure_1.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=4000)
 #plot_deformed_structure(structure_2.elements, text=False, nodes=True, nodes_labels=False, deformada=True, escala=2000)
@@ -43,9 +43,9 @@ plotStructureWithAxialDiagram(structure_1.elements, escala_axial=1e-6, show_stru
 #---------------------------------
 #Con offsets
 #---------------------------------
-structure_1 = Structure(dxdy = [0.5, 0.0], caso='a')
-structure_2 = Structure(dxdy = [0.5, 0.0], caso='b')
-structure_3 = Structure(dxdy = [0.5, 0.0], caso='c')
+structure_1 = Structure(nombre='Caso A, con offsets rigidos', dxdy = [0.5, 0.0], caso='a')
+structure_2 = Structure(nombre='Caso B, con offsets rigidos', dxdy = [0.5, 0.0], caso='b')
+structure_3 = Structure(nombre='Caso C, con offsets rigidos', dxdy = [0.5, 0.0], caso='c')
 
 
 M = Assembly(structure_1.nodes, structure_1.elements)
