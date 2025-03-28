@@ -229,8 +229,6 @@ def plotStructureWithMomentDiagram(structure_list, Escala, show_structure):
 
 
 
-
-
 def plotStructureWithShearDiagram(structure_list, Escala=[1e-4,1e-4,1e-4], show_structure=True):
     
     beams_list = []
