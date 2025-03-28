@@ -185,32 +185,44 @@ def plotStructureWithMomentDiagram(structure_list, Escala, show_structure):
 
             f_local = beam.f_local
 
+            # Momentos en extremos locales
             M1, M2 = f_local[2], f_local[5]
 
-            # Determinar si es horizontal o vertical
+            # Comprobamos orientación del elemento
             is_horizontal = np.isclose(yi, yf, atol=1e-6)
+            is_vertical = np.isclose(xi, xf, atol=1e-6)
 
             x_local = np.linspace(0, L, 100)
 
+            # CASO A: Vigas horizontales con carga distribuida vertical
             if is_horizontal and beam.q != 0:
                 q = beam.q
-                # Momentos parabólicos para vigas horizontales con carga distribuida
                 M_vals = M1 * (1 - x_local/L) + M2 * (x_local/L) - (q * x_local * (L - x_local)) / 2
+
+            # CASO B: Columnas verticales del lado izquierdo con carga lateral distribuida
+            elif is_vertical and beam.distribuida:
+                # carga lateral distribuida uniforme q lateral en la columna
+                q_lat = structure.peso_total * 0.5 / np.sum(structure.Espaciado_v[1:])
+                # Momentos en columna vertical con carga lateral uniforme
+                # Fórmula: M(x) = M1*(1 - x/L) + M2*(x/L) + q_lat*(x*(L - x))/2
+                # Signo depende de cómo se aplique la carga; revisa tu convención
+                M_vals = M1 * (1 - x_local/L) + M2 * (x_local/L) + q_lat * x_local * (L - x_local) / 2
+
+            # CASO C: Otros elementos (columnas sin carga o vigas sin carga)
             else:
-                # Momentos lineales para columnas y vigas sin carga distribuida
                 M_vals = np.linspace(M1, M2, len(x_local))
 
-            # Escalar el momento
+            # Escalar momentos
             y_local = -M_vals * escala_m
             points_local = np.vstack([x_local, y_local])
             points_global = beam.R @ points_local
             x_global = points_global[0, :] + xi
             y_global = points_global[1, :] + yi
 
-            # Graficar momento flectores
+            # Dibujar momentos
             ax.plot(x_global, y_global, 'purple', linewidth=1, label='Momento' if beam == structure.elements[0] else "")
             
-            # Dibujar estructura original si se requiere
+            # Dibujar estructura original (opcional)
             if show_structure:
                 ax.plot([xi, xf], [yi, yf], 'b-', linewidth=0.5)
 
@@ -223,9 +235,10 @@ def plotStructureWithMomentDiagram(structure_list, Escala, show_structure):
         ax.grid(False)
         ax.legend()
 
-    plt.suptitle("Diagramas de momentos", fontsize=20)
+    plt.suptitle("Diagramas de momentos con cargas laterales", fontsize=20)
     plt.tight_layout()
     plt.show()
+
 
 
 
