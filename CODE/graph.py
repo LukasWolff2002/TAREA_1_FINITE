@@ -164,162 +164,139 @@ def plot_deformed_structures(structure_list, text=False, nodes=True, nodes_label
     plt.show()
 
 
-def plotStructureWithMomentDiagram(structure_list, Escala=[1,1,1], show_structure=True):
+def plotStructureWithMomentDiagram(structure_list, Escala, show_structure):
+    
+    fig, axes = plt.subplots(1, len(structure_list), figsize=(6 * len(structure_list), 6))
 
-    beams_list = []
-
-    for structure in structure_list:
-        beams_list.append(structure.elements)
-        
-    # Crear los subgráficos
-    fig, axes = plt.subplots(1, len(beams_list), figsize=(18, 6))  # Ajustar tamaño basado en número de estructuras
-
-    # Si solo hay una estructura, `axes` es un solo objeto, así que lo convertimos en una lista
-    if len(beams_list) == 1:
+    if len(structure_list) == 1:
         axes = [axes]
 
-    for i, beams in enumerate(beams_list):
+    for i, structure in enumerate(structure_list):
+        ax = axes[i]
+        escala_m = Escala[i] if i < len(Escala) else Escala[-1]
 
-        ax = axes[i]  # Seleccionar el gráfico correspondiente para esta estructura
-
-        escala_momentos = Escala[i]
-
-        for beam in beams:
+        for beam in structure.elements:
             xi, yi = beam.coord_i_offset
             xf, yf = beam.coord_f_offset
             L = beam.L
 
-            # Asegurarse de tener fuerzas internas
             if not hasattr(beam, "f_local"):
                 beam.extractForces()
 
-            if xi == xf:
-                #Tengo un elemento vertical
+            f_local = beam.f_local
 
-                # Fuerzas cortantes locales
-                V1 = -beam.f_local[1] 
-                V2 = beam.f_local[4] 
-            
-            else:
-                # Fuerzas cortantes locales
-                V1 = -beam.f_local[0]
-                V2 = -beam.f_local[3]
+            M1, M2 = f_local[2], f_local[5]
 
-            # Interpolación de la fuerza cortante
+            # Determinar si es horizontal o vertical
+            is_horizontal = np.isclose(yi, yf, atol=1e-6)
+
             x_local = np.linspace(0, L, 100)
-            V_vals = (1 - x_local / L) * V1 + (x_local / L) * V2  # Interpolación lineal de corte
 
-            # Integrar la fuerza cortante para obtener el diagrama de momento
-            M_vals = np.cumsum(V_vals) * (x_local[1] - x_local[0])  # Aproximación de la integral
-            M_vals -= M_vals[0]  # Ajustar para que M(x=0) = 0, o usar M1 si es necesario
+            if is_horizontal and beam.q != 0:
+                q = beam.q
+                # Momentos parabólicos para vigas horizontales con carga distribuida
+                M_vals = M1 * (1 - x_local/L) + M2 * (x_local/L) - (q * x_local * (L - x_local)) / 2
+            else:
+                # Momentos lineales para columnas y vigas sin carga distribuida
+                M_vals = np.linspace(M1, M2, len(x_local))
 
-            # Transformar a coordenadas globales
-            y_local = -M_vals * escala_momentos  # Convención positiva hacia arriba
+            # Escalar el momento
+            y_local = -M_vals * escala_m
             points_local = np.vstack([x_local, y_local])
             points_global = beam.R @ points_local
             x_global = points_global[0, :] + xi
             y_global = points_global[1, :] + yi
 
-            # Dibujar el diagrama de momento
-            ax.plot(x_global, y_global, color='purple', linewidth=1, label='Momento (de corte)' if beam == beams[0] else "")
-
-            if show_structure:
-                ax.plot([xi, xf], [yi, yf], 'b-', linewidth=0.5)
-               
-
-            # Marcar extremos con el signo adecuado
-            #ax.text(x_global[0], y_global[0], f'{M_vals[0]:.1f}', fontsize=8, color='purple', ha='right')
-            #ax.text(x_global[-1], y_global[-1], f'{M_vals[-1]:.1f}', fontsize=8, color='purple', ha='left')
-
-            ax.set_aspect('equal')
-            ax.set_xlabel('X (m)')
-            ax.set_ylabel('Y (m)')
-            ax.set_title(f"{structure_list[i].nombre} - Escala: {escala_momentos}:1")
-            ax.grid(False)
-            ax.legend()
-
-    plt.suptitle("Diagramas de momentos",fontsize=20)
-    plt.tight_layout()
-    plt.show()
-
-
-
-
-def plotStructureWithShearDiagram(structure_list, Escala=[1e-4,1e-4,1e-4], show_structure=True):
-    
-    beams_list = []
-
-    for structure in structure_list:
-        beams_list.append(structure.elements)
-        
-    # Crear los subgráficos
-    fig, axes = plt.subplots(1, len(beams_list), figsize=(18, 6))  # Ajustar tamaño basado en número de estructuras
-
-    # Si solo hay una estructura, `axes` es un solo objeto, así que lo convertimos en una lista
-    if len(beams_list) == 1:
-        axes = [axes]
-
-    for i, beams in enumerate(beams_list):
-
-        ax = axes[i]  # Seleccionar el gráfico correspondiente para esta estructura
-
-        escala_corte = Escala[i]
-        for beam in beams:
-            # Extraer extremos de la barra útil
-            xi, yi = beam.coord_i_offset
-            xf, yf = beam.coord_f_offset
-            L = beam.L
-
-            # Asegurar que tiene fuerzas internas
-            if not hasattr(beam, "f_local"):
-                beam.extractForces()
-
-            if xi == xf:
-                #Tengo un elemento vertical
-
-                # Fuerzas cortantes locales
-                V1 = beam.f_local[1] 
-                V2 = -beam.f_local[4] 
+            # Graficar momento flectores
+            ax.plot(x_global, y_global, 'purple', linewidth=1, label='Momento' if beam == structure.elements[0] else "")
             
-            else:
-                # Fuerzas cortantes locales
-                V1 = beam.f_local[0]
-                V2 = beam.f_local[3]
-
-            # Coordenadas locales a lo largo del eje
-            x_local = np.linspace(0, L, 50)
-            V_vals = (1 - x_local / L) * V1 + (x_local / L) * V2  # interpolación lineal
-
-            # Coordenadas locales (x, y corte)
-            points_local = np.vstack([x_local, -V_vals * escala_corte])  # signo negativo: convención hacia arriba
-
-            # Transformar a global
-            points_global = beam.R @ points_local
-            x_global = points_global[0, :] + xi
-            y_global = points_global[1, :] + yi
-
-            # Dibujar la línea del diagrama
-            ax.plot(x_global, y_global, color='green', linewidth=1, label='Corte' if beam == beams[0] else "")
-
-            # Dibujar la estructura si se desea
+            # Dibujar estructura original si se requiere
             if show_structure:
                 ax.plot([xi, xf], [yi, yf], 'b-', linewidth=0.5)
-                
-
-            # Marcar valores de corte al inicio y final
-            #ax.text(x_global[0], y_global[0], f'{V1:.1f}', fontsize=8, color='darkgreen', ha='right')
-            #ax.text(x_global[-1], y_global[-1], f'{V2:.1f}', fontsize=8, color='darkgreen', ha='left')
 
         ax.set_aspect('equal')
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
-        ax.set_title(f"{structure_list[i].nombre} - Escala: {escala_corte}:1")
+        titulo = getattr(structure, "nombre", f"Estructura {i+1}")
+        ax.set_title(f"{titulo} - Escala: {escala_m}:1")
+
         ax.grid(False)
         ax.legend()
-    
-    plt.suptitle("Diagramas de corte",fontsize=20)
+
+    plt.suptitle("Diagramas de momentos", fontsize=20)
     plt.tight_layout()
     plt.show()
+
+
+
+
+def plotStructureWithShearDiagram(structure_list, Escala, show_structure):
+    fig, axes = plt.subplots(1, len(structure_list), figsize=(6 * len(structure_list), 6))
+
+    if len(structure_list) == 1:
+        axes = [axes]
+
+    for i, structure in enumerate(structure_list):
+        ax = axes[i]
+        escala_v = Escala[i] if i < len(Escala) else Escala[-1]
+
+        for beam in structure.elements:
+            xi, yi = beam.coord_i_offset
+            xf, yf = beam.coord_f_offset
+            L = beam.L
+
+            if not hasattr(beam, "f_local"):
+                beam.extractForces()
+
+            f_local = beam.f_local
+
+            # Determinar si es horizontal o vertical
+            is_horizontal = np.isclose(yi, yf, atol=1e-6)
+
+            x_local = np.linspace(0, L, 100)
+
+            if is_horizontal and beam.q != 0:
+                q = beam.q
+                # Fuerzas cortantes lineales en vigas con carga distribuida
+                V_vals = f_local[1] * (1 - x_local / L) - f_local[4] * (x_local / L) - q * (L / 2 - x_local)
+            else:
+                # Fuerzas cortantes lineales para columnas o elementos sin carga distribuida
+                if is_horizontal:
+                    V1, V2 = f_local[1], -f_local[4]
+                else:
+                    V1, V2 = f_local[0], -f_local[3]
+                V_vals = np.linspace(V1, V2, len(x_local))
+
+            # Escalar la cortante
+            y_local = -V_vals * escala_v
+            points_local = np.vstack([x_local, y_local])
+            points_global = beam.R @ points_local
+            x_global = points_global[0, :] + xi
+            y_global = points_global[1, :] + yi
+
+            # Graficar cortantes
+            ax.plot(x_global, y_global, 'green', linewidth=1, label='Corte' if beam == structure.elements[0] else "")
+
+            # Dibujar estructura original si se requiere
+            if show_structure:
+                ax.plot([xi, xf], [yi, yf], 'b-', linewidth=0.5)
+
+        ax.set_aspect('equal')
+        ax.set_xlabel('X (m)')
+        ax.set_ylabel('Y (m)')
+        titulo = getattr(structure, "nombre", f"Estructura {i+1}")
+        ax.set_title(f"{titulo} - Escala: {escala_v}:1")
+
+        ax.grid(False)
+        ax.legend()
+
+    plt.suptitle("Diagramas de fuerzas cortantes", fontsize=20)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
 
 def plotStructureWithAxialDiagram(structure_list, Escala=[1,1,1], show_structure=True):
     
