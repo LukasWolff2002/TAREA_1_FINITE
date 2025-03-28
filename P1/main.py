@@ -49,6 +49,6 @@ Solver(structure_3.nodes, structure_3.elements, M.kff_matrix, M.kfc_matrix, M.kc
 plot_deformed_structures([structure_1, structure_2, structure_3], text=False, nodes=True, nodes_labels=False, deformada=True, Escala=[750, 500, 500])
 
 plotStructureWithMomentDiagram([structure_1, structure_2, structure_3], Escala=[1e-5, 1e-6, 1e-6], show_structure=True)
-plotStructureWithShearDiagram([structure_1, structure_2, structure_3], Escala=[1e-5, 1e-6, 1e-6], show_structure=True)
+plotStructureWithShearDiagram([structure_1, structure_2, structure_3], Escala=[1e-6, 1e-6, 1e-6], show_structure=True)
 plotStructureWithAxialDiagram([structure_1, structure_2, structure_3], Escala=[1e-6, 1e-6, 1e-6], show_structure=True)
 
