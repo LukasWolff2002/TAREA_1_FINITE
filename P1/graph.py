@@ -291,7 +291,7 @@ def plot_deformed_structure(beams, text=False, nodes=True, nodes_labels=False, d
     plt.show()
 
 
-def plotStructureWithMomentDiagram(beams, escala_momentos=1e-4, show_structure=True):
+def plotStructureWithMomentDiagram(beams, escala_momentos, show_structure=True):
 
     """
     Dibuja el diagrama de momento flector a partir del diagrama de corte.
