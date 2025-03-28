@@ -51,7 +51,7 @@ def plot_original_structure_all_forces(nodes, elements):
     # Configuración del gráfico
     ax.set_xlabel("X [m]")
     ax.set_ylabel("Y [m]")
-    ax.set_title("Estructura Original con Colores según Área de la Sección")
+    ax.set_title("Original Structure based on area section")
     ax.axis("equal")
     plt.grid(True)
     plt.show()
@@ -71,7 +71,7 @@ def plot_deformed_structures(structure_list, text=False, nodes=True, nodes_label
         axes = [axes]
 
     # Estilos comunes para los gráficos
-    offset_color = 'orange'  # Color para los offsets rígidos
+    offset_color = 'b'  # Color para los offsets rígidos
     elemento_color = 'blue'  # Color para el elemento útil
     deformada_color = 'r'  # Color para la deformada
     linewidth = 1  # Ancho de las líneas
@@ -159,7 +159,7 @@ def plot_deformed_structures(structure_list, text=False, nodes=True, nodes_label
         ax.grid(False)
 
         #ax.legend(['Deformada (x{})'.format(escala), 'Offset rígido'], loc='upper left', bbox_to_anchor=(1, 1))
-    plt.suptitle("Estructuras deformadas",fontsize=20)
+    plt.suptitle("Deformed Structures",fontsize=20)
     plt.tight_layout()
     plt.show()
 
@@ -235,7 +235,7 @@ def plotStructureWithMomentDiagram(structure_list, Escala, show_structure):
         ax.grid(False)
         ax.legend()
 
-    plt.suptitle("Diagramas de momentos con cargas laterales", fontsize=20)
+    plt.suptitle("Moment Diagrams", fontsize=20)
     plt.tight_layout()
     plt.show()
 
@@ -303,7 +303,7 @@ def plotStructureWithShearDiagram(structure_list, Escala, show_structure):
         ax.grid(False)
         ax.legend()
 
-    plt.suptitle("Diagramas de fuerzas cortantes", fontsize=20)
+    plt.suptitle("Shear Diagrams", fontsize=20)
     plt.tight_layout()
     plt.show()
 
@@ -372,7 +372,7 @@ def plotStructureWithAxialDiagram(structure_list, Escala=[1,1,1], show_structure
         ax.set_title(f"{structure_list[i].nombre} - Escala: {escala_axial}:1")
         ax.legend()
 
-    plt.suptitle("Diagramas de esfuerzos axiales",fontsize=20)
+    plt.suptitle("Axial Diagrams",fontsize=20)
     plt.tight_layout()
     plt.show()
 
